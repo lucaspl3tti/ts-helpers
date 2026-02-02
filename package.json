@@ -1,0 +1,49 @@
+{
+  "name": "@lucaspl3tti/ts-helpers",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A lightweight, type-safe collection of utility functions to speed up your TypeScript and JavaScript development.",
+  "main": "./dist/ts-helpers.umd.cjs",
+  "module": "./dist/ts-helpers.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/ts-helpers.js",
+      "require": "./dist/ts-helpers.umd.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "lint:ts": "npx eslint -c eslint.config.mjs",
+    "lint:ts:fix": "npm run lint:ts -- --fix"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lucaspl3tti/ts-helpers.git"
+  },
+  "author": {
+    "name": "Jan-Luca Splettstößer",
+    "email": "jls@spletti-pixels.de",
+    "url": "https://luca-spletti.dev"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/lucaspl3tti/ts-helpers/issues"
+  },
+  "homepage": "https://github.com/lucaspl3tti/ts-helpers#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^25.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^9.39.2",
+    "globals": "^17.2.0",
+    "path": "^0.12.7",
+    "typescript": "^5.9.3",
+    "vite": "^6.4.1",
+    "vite-plugin-dts": "^4.5.4"
+  }
+}
