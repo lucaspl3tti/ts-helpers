@@ -1,7 +1,7 @@
 {
   "name": "@lucaspl3tti/ts-helpers",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A lightweight, type-safe collection of utility functions to speed up your TypeScript and JavaScript development.",
   "main": "./dist/ts-helpers.umd.cjs",
   "module": "./dist/ts-helpers.js",
@@ -9,7 +9,8 @@
   "exports": {
     ".": {
       "import": "./dist/ts-helpers.js",
-      "require": "./dist/ts-helpers.umd.cjs"
+      "require": "./dist/ts-helpers.umd.cjs",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
