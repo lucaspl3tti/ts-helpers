@@ -20,20 +20,26 @@ export default class ArrayAccess {
     return array.slice(-amount);
   }
 
-  static flatten<Type>(array: Type[]): Type[] {
-    return array.reduce((flat: Type[], toFlatten) => {
-      return [
-        ...flat,
-        ...(Array.isArray(toFlatten) ? this.flatten(toFlatten) : [toFlatten]),
-      ];
-    }, [] as Type[]);
+  static flatten<Type>(array: Type[], depth = Infinity): Type[] {
+    return array.flat(depth) as Type[];
   }
 
   static sortByProperty<Type, Key extends keyof Type>(
     array: Type[],
     property: Key,
+    direction: 'asc' | 'desc' = 'asc',
   ): Type[] {
-    return array.sort((a, b) => (a[property] > b[property] ? 1 : -1));
+    return [...array].sort((a, b) => {
+      if (a[property] > b[property]) {
+        return direction === 'asc' ? 1 : -1;
+      }
+
+      if (a[property] < b[property]) {
+        return direction === 'asc' ? -1 : 1;
+      }
+
+      return 0;
+    });
   }
 
   static getObjectByValue<Type extends object, Key extends keyof Type>(
@@ -52,8 +58,15 @@ export default class ArrayAccess {
     return array.some((item) => item[key] === value);
   }
 
-  static removeItem<Type>(array: Type[], itemToRemove: Type) {
-    return array.filter((item) => item !== itemToRemove);
+  static removeItem<Type>(
+    array: Type[],
+    itemOrPredicate: Type | ((item: Type) => boolean),
+  ): Type[] {
+    if (typeof itemOrPredicate === 'function') {
+      return array.filter((item) => !(itemOrPredicate as (item: Type) => boolean)(item));
+    }
+
+    return array.filter((item) => item !== itemOrPredicate);
   }
 
   static getRandomItem<Type>(array: Type[]): Type|undefined {
@@ -98,5 +111,73 @@ export default class ArrayAccess {
     }
 
     return string.split(',').map(item => item.trim());
+  }
+
+  static chunk<Type>(array: Type[], size: number): Type[][] {
+    if (size <= 0) {
+      return [];
+    }
+
+    const result: Type[][] = [];
+
+    for (let i = 0; i < array.length; i += size) {
+      result.push(array.slice(i, i + size));
+    }
+
+    return result;
+  }
+
+  static unique<Type>(array: Type[]): Type[] {
+    return [...new Set(array)];
+  }
+
+  static uniqueBy<Type>(array: Type[], key: keyof Type): Type[] {
+    const seen = new Set();
+    return array.filter((item) => {
+      const value = item[key];
+
+      if (seen.has(value)) {
+        return false;
+      }
+
+      seen.add(value);
+      return true;
+    });
+  }
+
+  static groupBy<Type>(array: Type[], key: keyof Type): Record<string, Type[]> {
+    return array.reduce((groups, item) => {
+      const groupKey = String(item[key]);
+      if (!groups[groupKey]) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey].push(item);
+      return groups;
+    }, {} as Record<string, Type[]>);
+  }
+
+  static zip<A, B>(a: A[], b: B[]): [A, B][] {
+    const length = Math.min(a.length, b.length);
+    const result: [A, B][] = [];
+
+    for (let index = 0; index < length; index++) {
+      result.push([a[index]!, b[index]!]);
+    }
+
+    return result;
+  }
+
+  static intersection<Type>(a: Type[], b: Type[]): Type[] {
+    const setB = new Set(b);
+    return a.filter((item) => setB.has(item));
+  }
+
+  static difference<Type>(a: Type[], b: Type[]): Type[] {
+    const setB = new Set(b);
+    return a.filter((item) => !setB.has(item));
+  }
+
+  static union<Type>(a: Type[], b: Type[]): Type[] {
+    return this.unique([...a, ...b]);
   }
 }

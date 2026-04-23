@@ -55,6 +55,9 @@ export default class ObjectAccess {
     };
   }
 
+  /**
+   * @deprecated: Will be removed in a future release. Use `ObjectAccess.omit`
+   */
   static removeProperty<Key extends string | number | symbol>(
     object: JsonObject,
     keyToRemove: Key,
@@ -73,7 +76,69 @@ export default class ObjectAccess {
     return entries[randomIndex];
   }
 
-  static deepClone(object: JsonObject): JsonObject|undefined {
-    return JSON.parse(JSON.stringify(object));
+  static deepClone<Type>(object: Type): Type {
+    return structuredClone(object);
+  }
+
+  static pick<Type extends object, Key extends keyof Type>(
+    object: Type,
+    keys: Key[],
+  ): Pick<Type, Key> {
+    const result = {} as Pick<Type, Key>;
+    keys.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(object, key)) {
+        result[key] = object[key];
+      }
+    });
+    return result;
+  }
+
+  static omit<Type extends object, Key extends keyof Type>(
+    object: Type,
+    keys: Key[],
+  ): Omit<Type, Key> {
+    const result = { ...object };
+    keys.forEach((key) => delete (result as Type)[key]);
+    return result as Omit<Type, Key>;
+  }
+
+  static deepMerge<Type extends object>(target: Type, source: Partial<Type>): Type {
+    const result: Type = structuredClone(target);
+
+    for (const key of Object.keys(source) as (keyof Type)[]) {
+      const sourceValue = source[key];
+      const targetValue = result[key];
+
+      if (
+        sourceValue !== null &&
+        typeof sourceValue === 'object' &&
+        !Array.isArray(sourceValue) &&
+        targetValue !== null &&
+        typeof targetValue === 'object' &&
+        !Array.isArray(targetValue)
+      ) {
+        result[key] = ObjectAccess.deepMerge(
+          targetValue as object,
+          sourceValue as object,
+        ) as Type[keyof Type];
+      } else {
+        result[key] = sourceValue as Type[keyof Type];
+      }
+    }
+
+    return result;
+  }
+
+  static mapValues<Type extends object, Value>(
+    object: Type,
+    fn: (value: Type[keyof Type], key: keyof Type) => Value,
+  ): Record<keyof Type, Value> {
+    const result = {} as Record<keyof Type, Value>;
+
+    for (const key of Object.keys(object) as (keyof Type)[]) {
+      result[key] = fn(object[key], key);
+    }
+
+    return result;
   }
 }

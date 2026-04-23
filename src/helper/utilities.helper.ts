@@ -5,7 +5,7 @@ import ObjectAccess from './object-access.helper';
  * Utilities provides a collection of general utility functions.
  */
 export default class Utilities {
-  // ** General utility functions **
+  // ## General utility functions
   /**
    * Block scope for a given amount of time in ms and run next set piece of
    * code only after given time has passed
@@ -127,15 +127,58 @@ export default class Utilities {
     return formData;
   }
 
-  // ##### Number utility functions
+  static throttle<Type extends (...args: any[]) => void>(fn: Type, milliseconds: number): Type {
+    let lastCall = 0;
+
+    return function(...args: Parameters<Type>): void {
+      const now = Date.now();
+
+      if (now - lastCall >= milliseconds) {
+        lastCall = now;
+        fn(...args);
+      }
+    } as Type;
+  }
+
+  static memoize<Type extends (...args: any[]) => any>(fn: Type): Type {
+    const cache = new Map<string, ReturnType<Type>>();
+
+    return function(...args: Parameters<Type>): ReturnType<Type> {
+      const key = JSON.stringify(args);
+
+      if (cache.has(key)) {
+        return cache.get(key) as ReturnType<Type>;
+      }
+
+      const result = fn(...args) as ReturnType<Type>;
+      cache.set(key, result);
+      return result;
+    } as Type;
+  }
+
+  static pipe<Type>(...fns: Array<(arg: Type) => Type>): (arg: Type) => Type {
+    return (arg: Type): Type => fns.reduce((acc, fn) => fn(acc), arg);
+  }
+
+  static compose<Type>(...fns: Array<(arg: Type) => Type>): (arg: Type) => Type {
+    return (arg: Type): Type => fns.reduceRight((acc, fn) => fn(acc), arg);
+  }
+
+  // ## Number utility functions
   static getRandomNumber(minimumValue: number, maximumValue: number): number {
     return Math.floor(Math.random() * (maximumValue - minimumValue + 1) + minimumValue);
   }
 
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isEven instead
+   */
   static numberIsEven(number: number): boolean {
     return number % 2 === 0;
   }
 
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isOdd instead
+   */
   static numberIsOdd(number: number): boolean {
     return number % 2 !== 0;
   }
@@ -157,13 +200,7 @@ export default class Utilities {
     return (value: number): number => this.clamp(value, min, max);
   }
 
-  // ##### Validation utility functions
-  static isValidEmail(email: string) {
-    const emailRegex = /^[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
-  }
-
-  // ##### Text utility functions
+  // ## Text utility functions
   static getNextSmallerHeadingType(headingType: string): HeadingType {
     const level = parseInt(headingType.replace('h', ''), 10);
 
@@ -224,5 +261,14 @@ export default class Utilities {
     }
 
     return result.join('');
+  }
+
+  // ## Validation utility functions
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isValidEmail instead
+   */
+  static isValidEmail(email: string): boolean {
+    const emailRegex = /^[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return emailRegex.test(email);
   }
 }

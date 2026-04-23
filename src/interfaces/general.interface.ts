@@ -36,3 +36,27 @@ export interface RandomTextOptions {
 
 export type Breakpoint = 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | '3xl' | 'fhd' | 'qhd' | 'uhd';
 export type HeadingType = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+
+export type StorageType = 'local' | 'session';
+
+export interface StorageOptions {
+  /** Time-to-live in seconds. After expiry `get()` returns `null`. */
+  ttl?: number;
+  /** Which storage to use. Defaults to `'local'`. */
+  storage?: StorageType;
+}
+
+export interface StorageEntry<Value> {
+  value: Value;
+  expiresAt: number | null;
+}
+
+export interface CookieOptions {
+  /** Expiry: number of days from now, or an exact `Date`. */
+  expires?: number | Date;
+  /** Cookie path. Defaults to `'/'`. */
+  path?: string;
+  domain?: string;
+  secure?: boolean;
+  sameSite?: 'Strict' | 'Lax' | 'None';
+}

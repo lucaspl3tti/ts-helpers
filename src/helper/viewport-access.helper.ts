@@ -129,4 +129,12 @@ export default class ViewportAccess {
     const viewportWidth = window.innerWidth;
     return viewportWidth >= this.breakpoints.uhd;
   }
+
+  static isAbove(breakpoint: Breakpoint): boolean {
+    return window.innerWidth >= this.breakpoints[breakpoint];
+  }
+
+  static isBelow(breakpoint: Breakpoint): boolean {
+    return window.innerWidth < this.breakpoints[breakpoint];
+  }
 }

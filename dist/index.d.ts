@@ -4,17 +4,25 @@
 export declare class ArrayAccess {
     static first<Type>(array: Type[], amount?: number): Type | Type[] | undefined;
     static last<Type>(array: Type[], amount?: number): Type | Type[] | undefined;
-    static flatten<Type>(array: Type[]): Type[];
-    static sortByProperty<Type, Key extends keyof Type>(array: Type[], property: Key): Type[];
+    static flatten<Type>(array: Type[], depth?: number): Type[];
+    static sortByProperty<Type, Key extends keyof Type>(array: Type[], property: Key, direction?: 'asc' | 'desc'): Type[];
     static getObjectByValue<Type extends object, Key extends keyof Type>(array: Type[], key: Key, value: Type[Key]): Type | undefined;
     static hasObjectWithValue<Type>(array: Type[], key: keyof Type, value: Type[keyof Type]): boolean;
-    static removeItem<Type>(array: Type[], itemToRemove: Type): Type[];
+    static removeItem<Type>(array: Type[], itemOrPredicate: Type | ((item: Type) => boolean)): Type[];
     static getRandomItem<Type>(array: Type[]): Type | undefined;
     static wrapInArray<Type>(value: Type | null | undefined): Type[];
     static toStringSentence(array: string[]): string;
     static toCommaSeparatedString(array: string[]): string;
     static getArrayFromNewlines(string: string): string[];
     static getArrayFromCommas(string: string): string[];
+    static chunk<Type>(array: Type[], size: number): Type[][];
+    static unique<Type>(array: Type[]): Type[];
+    static uniqueBy<Type>(array: Type[], key: keyof Type): Type[];
+    static groupBy<Type>(array: Type[], key: keyof Type): Record<string, Type[]>;
+    static zip<A, B>(a: A[], b: B[]): [A, B][];
+    static intersection<Type>(a: Type[], b: Type[]): Type[];
+    static difference<Type>(a: Type[], b: Type[]): Type[];
+    static union<Type>(a: Type[], b: Type[]): Type[];
 }
 
 declare type Breakpoint = 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | '3xl' | 'fhd' | 'qhd' | 'uhd';
@@ -49,6 +57,27 @@ declare type ColorDefinition = HexCode | RgbString | RgbaString | HslString | Hs
 declare type ColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'unknown';
 
 declare type ColorReturnType = 'string' | 'object';
+
+/**
+ * Cookie provides a type-safe API for reading and writing browser cookies.
+ */
+export declare class Cookie {
+    static set(name: string, value: string, options?: CookieOptions): void;
+    static get(name: string): string | null;
+    static delete(name: string, path?: string): void;
+    static getAll(): Record<string, string>;
+    static has(name: string): boolean;
+}
+
+declare interface CookieOptions {
+    /** Expiry: number of days from now, or an exact `Date`. */
+    expires?: number | Date;
+    /** Cookie path. Defaults to `'/'`. */
+    path?: string;
+    domain?: string;
+    secure?: boolean;
+    sameSite?: 'Strict' | 'Lax' | 'None';
+}
 
 declare type CssVariableName = `--${string}`;
 
@@ -117,14 +146,11 @@ export declare class Formatting {
     static decodeString(string: string): string;
     static truncateString(string: string, maxCharacters: number, useWordBoundary?: boolean): string;
     static camelToDashCase(string: string): string;
+    static dashToCamelCase(string: string): string;
+    static capitalize(string: string): string;
+    static titleCase(string: string): string;
+    static formatNumber(n: number, locale?: string, options?: Intl.NumberFormatOptions): string;
     static spaceToDashCase(string: string): string;
-    /**
-     * Convert a given string to a string with a unit.
-     *
-     * If the given string is empty or not a number, it will return null.
-     * If the given string is a number, it will return a string with the given
-     * unit (default is 'px').
-     */
     static convertToUnit(string: string | number, unit?: string): string | null;
     static removeWhitespace(str: string): string;
 }
@@ -210,9 +236,16 @@ export declare class ObjectAccess {
     }, keyToAdd: Key, valueToAdd: Value): {
         [key: string | number | symbol]: any;
     };
+    /**
+     * @deprecated: Will be removed in a future release. Use `ObjectAccess.omit`
+     */
     static removeProperty<Key extends string | number | symbol>(object: JsonObject, keyToRemove: Key): JsonObject;
     static getRandomProperty<Key extends string | number | symbol>(object: JsonObject): JsonObject | undefined;
-    static deepClone(object: JsonObject): JsonObject | undefined;
+    static deepClone<Type>(object: Type): Type;
+    static pick<Type extends object, Key extends keyof Type>(object: Type, keys: Key[]): Pick<Type, Key>;
+    static omit<Type extends object, Key extends keyof Type>(object: Type, keys: Key[]): Omit<Type, Key>;
+    static deepMerge<Type extends object>(target: Type, source: Partial<Type>): Type;
+    static mapValues<Type extends object, Value>(object: Type, fn: (value: Type[keyof Type], key: keyof Type) => Value): Record<keyof Type, Value>;
 }
 
 declare interface RandomTextOptions {
@@ -231,6 +264,43 @@ declare interface RgbObject {
 }
 
 declare type RgbString = `rgb(${number}, ${number}, ${number})`;
+
+/**
+ * Storage provides a type-safe wrapper around `localStorage` and
+ * `sessionStorage` with optional time-to-live (TTL) support.
+ */
+declare class Storage_2 {
+    private static getStore;
+    static set<Value>(key: string, value: Value, options?: StorageOptions): void;
+    static get<Value>(key: string, storage?: StorageType): Value | null;
+    static remove(key: string, storage?: StorageType): void;
+    static clear(storage?: StorageType): void;
+    static has(key: string, storage?: StorageType): boolean;
+}
+export { Storage_2 as Storage }
+
+declare interface StorageOptions {
+    /** Time-to-live in seconds. After expiry `get()` returns `null`. */
+    ttl?: number;
+    /** Which storage to use. Defaults to `'local'`. */
+    storage?: StorageType;
+}
+
+declare type StorageType = 'local' | 'session';
+
+/**
+ * StringHelper provides advanced string manipulation utilities that go
+ * beyond the basic formatting methods in the `Formatting` class.
+ */
+export declare class StringHelper {
+    static slugify(string: string): string;
+    static truncateMiddle(string: string, maxLen: number): string;
+    static countOccurrences(string: string, search: string): number;
+    static stripHtml(string: string): string;
+    static template(string: string, vars: Record<string, string>): string;
+    static capitalize(string: string): string;
+    static titleCase(string: string): string;
+}
 
 /**
  * Utilities provides a collection of general utility functions.
@@ -252,15 +322,42 @@ export declare class Utilities {
     static isEmpty<Type>(value: Type): boolean;
     static iterate<Key extends string | number, Item>(source: Map<Key, Item> | Array<Item> | FormData | object | string, callback: (value: Item, key?: Key) => void): void;
     static getFormDataFromJson(jsonObject: JsonObject, parentKey?: string): FormData;
+    static throttle<Type extends (...args: any[]) => void>(fn: Type, milliseconds: number): Type;
+    static memoize<Type extends (...args: any[]) => any>(fn: Type): Type;
+    static pipe<Type>(...fns: Array<(arg: Type) => Type>): (arg: Type) => Type;
+    static compose<Type>(...fns: Array<(arg: Type) => Type>): (arg: Type) => Type;
     static getRandomNumber(minimumValue: number, maximumValue: number): number;
+    /**
+     * @deprecated: Will be removed in a future release. Use Validation.isEven instead
+     */
     static numberIsEven(number: number): boolean;
+    /**
+     * @deprecated: Will be removed in a future release. Use Validation.isOdd instead
+     */
     static numberIsOdd(number: number): boolean;
     static calculatePxFromRem(rem: number | string): number;
     static clamp(value: number, min: number, max: number): number;
     static createClamper(min: number, max: number): (value: number) => number;
-    static isValidEmail(email: string): boolean;
     static getNextSmallerHeadingType(headingType: string): HeadingType;
     static generateRandomText(length: number, options?: RandomTextOptions): string;
+    /**
+     * @deprecated: Will be removed in a future release. Use Validation.isValidEmail instead
+     */
+    static isValidEmail(email: string): boolean;
+}
+
+/**
+ * Validation provides common validation helpers beyond `Utilities.isValidEmail`.
+ */
+export declare class Validation {
+    static isValidEmail(email: string): boolean;
+    static isUrl(string: string): boolean;
+    static isPhoneNumber(string: string): boolean;
+    static isNumeric(string: string): boolean;
+    static isBetween(number: number, min: number, max: number): boolean;
+    static isEven(number: number): boolean;
+    static isOdd(number: number): boolean;
+    static isIban(string: string): boolean;
 }
 
 /**
@@ -282,6 +379,8 @@ export declare class ViewportAccess {
     static isFHD(): boolean;
     static isQHD(): boolean;
     static isUHD(): boolean;
+    static isAbove(breakpoint: Breakpoint): boolean;
+    static isBelow(breakpoint: Breakpoint): boolean;
 }
 
 export { }
