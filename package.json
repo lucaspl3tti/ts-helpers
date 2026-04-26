@@ -1,7 +1,7 @@
 {
   "name": "@lucaspl3tti/ts-helpers",
   "type": "module",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A lightweight, type-safe collection of utility functions to speed up your TypeScript and JavaScript development.",
   "main": "./dist/ts-helpers.umd.cjs",
   "module": "./dist/ts-helpers.js",
