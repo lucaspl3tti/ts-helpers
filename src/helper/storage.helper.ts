@@ -1,4 +1,4 @@
-import type { StorageOptions, StorageType, StorageEntry } from '../interfaces/general.interface';
+import type { StorageOptions, StorageType, StorageEntry } from '../types/storage.types';
 
 /**
  * Storage provides a type-safe wrapper around `localStorage` and

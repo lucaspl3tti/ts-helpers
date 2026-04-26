@@ -10,13 +10,13 @@ function setInnerWidth(width: number) {
 }
 
 function mockMatchMedia(matches: boolean) {
-  const mql = {
+  const mediaQueryList = {
     matches,
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
   } as unknown as MediaQueryList;
-  vi.spyOn(window, 'matchMedia').mockReturnValue(mql);
-  return mql;
+  vi.spyOn(window, 'matchMedia').mockReturnValue(mediaQueryList);
+  return mediaQueryList;
 }
 
 describe('ViewportAccess', () => {
@@ -62,15 +62,17 @@ describe('ViewportAccess', () => {
 
   describe('watchMediaQuery', () => {
     it('adds a change event listener and fires the callback on change', () => {
-      const mql = mockMatchMedia(true);
-      const cb = vi.fn();
-      ViewportAccess.watchMediaQuery(mql, cb);
-      expect(mql.addEventListener).toHaveBeenCalledWith('change', expect.any(Function));
+      const mediaQueryList = mockMatchMedia(true);
+      const callback = vi.fn();
+      ViewportAccess.watchMediaQuery(mediaQueryList, callback);
+      expect(mediaQueryList.addEventListener).toHaveBeenCalledWith('change', expect.any(Function));
       // Simulate the change event by invoking the registered handler
-      const handler = (mql.addEventListener as ReturnType<typeof vi.fn>).mock.calls[0][1] as (e: MediaQueryListEvent) => void;
+      const handler = (mediaQueryList.addEventListener as ReturnType<typeof vi.fn>)
+        .mock
+        .calls[0][1] as (event: MediaQueryListEvent) => void;
       const event = new Event('change') as MediaQueryListEvent;
       handler(event);
-      expect(cb).toHaveBeenCalledWith(event);
+      expect(callback).toHaveBeenCalledWith(event);
     });
   });
 

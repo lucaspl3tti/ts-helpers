@@ -1,5 +1,5 @@
-import js from '@eslint/js';
-import ts from '@typescript-eslint/eslint-plugin';
+import eslintJs from '@eslint/js';
+import eslintTs from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import globals from 'globals';
 
@@ -11,7 +11,7 @@ export default [
     ],
   },
 
-  js.configs.recommended,
+  eslintJs.configs.recommended,
 
   {
     files: ['**/*.{ts,js,mjs,cjs}'],
@@ -24,7 +24,7 @@ export default [
       },
     },
     plugins: {
-      '@typescript-eslint': ts,
+      '@typescript-eslint': eslintTs,
     },
     rules: {
       'comma-dangle': ['error', 'always-multiline'],
@@ -48,6 +48,10 @@ export default [
       }],
       'prefer-destructuring': ['error', { object: true, array: false }],
       'quotes': ['error', 'single', { allowTemplateLiterals: true }],
+      'id-length': ['error', {
+        min: 3,
+        properties: 'never',
+      }],
       'semi': ['error', 'always'],
       '@typescript-eslint/naming-convention': [
         'error',

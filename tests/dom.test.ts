@@ -14,8 +14,6 @@ describe('Dom', () => {
     vi.restoreAllMocks();
   });
 
-  // ─── isNode ────────────────────────────────────────────────────────────────
-
   describe('isNode', () => {
     it('returns true for a valid HTMLElement', () => {
       expect(Dom.isNode(document.createElement('div'))).toBe(true);
@@ -29,8 +27,6 @@ describe('Dom', () => {
       expect(Dom.isNode(null)).toBe(false);
     });
   });
-
-  // ─── get ───────────────────────────────────────────────────────────────────
 
   describe('get', () => {
     it('returns the matching element', () => {
@@ -52,17 +48,15 @@ describe('Dom', () => {
     });
   });
 
-  // ─── getSingleElements ─────────────────────────────────────────────────────
-
   describe('getSingleElements', () => {
     it('returns a map of elements by key', () => {
       const span = document.createElement('span');
-      const p = document.createElement('p');
+      const paragraph = document.createElement('p');
       container.appendChild(span);
-      container.appendChild(p);
+      container.appendChild(paragraph);
       const result = Dom.getSingleElements(container, { s: 'span', p: 'p' });
       expect(result.s).toBe(span);
-      expect(result.p).toBe(p);
+      expect(result.p).toBe(paragraph);
     });
 
     it('returns null values in non-strict mode for missing elements', () => {
@@ -70,8 +64,6 @@ describe('Dom', () => {
       expect(result.x).toBeNull();
     });
   });
-
-  // ─── getAll ────────────────────────────────────────────────────────────────
 
   describe('getAll', () => {
     it('returns all matching elements', () => {
@@ -87,9 +79,11 @@ describe('Dom', () => {
     it('returns empty array in non-strict mode when none found', () => {
       expect(Dom.getAll(container, '.none', false)).toEqual([]);
     });
-  });
 
-  // ─── addClass ──────────────────────────────────────────────────────────────
+    it('throws in strict mode when parent is not a valid Node', () => {
+      expect(() => Dom.getAll(null as any, 'div')).toThrow('not a valid HTML Node');
+    });
+  });
 
   describe('addClass', () => {
     it('adds a single class string', () => {
@@ -103,8 +97,6 @@ describe('Dom', () => {
       expect(container.classList.contains('bar')).toBe(true);
     });
   });
-
-  // ─── removeClass ───────────────────────────────────────────────────────────
 
   describe('removeClass', () => {
     it('removes a single class string', () => {
@@ -121,8 +113,6 @@ describe('Dom', () => {
     });
   });
 
-  // ─── hasClass ──────────────────────────────────────────────────────────────
-
   describe('hasClass', () => {
     it('returns true when class is present', () => {
       container.classList.add('foo');
@@ -133,8 +123,6 @@ describe('Dom', () => {
       expect(Dom.hasClass(container, 'bar')).toBe(false);
     });
   });
-
-  // ─── toggleClass ───────────────────────────────────────────────────────────
 
   describe('toggleClass', () => {
     it('toggles a single class on', () => {
@@ -155,8 +143,6 @@ describe('Dom', () => {
     });
   });
 
-  // ─── listenTo ──────────────────────────────────────────────────────────────
-
   describe('listenTo', () => {
     it('adds an event listener that fires on the given event', () => {
       const handler = vi.fn();
@@ -165,8 +151,6 @@ describe('Dom', () => {
       expect(handler).toHaveBeenCalledTimes(1);
     });
   });
-
-  // ─── setStyle ──────────────────────────────────────────────────────────────
 
   describe('setStyle', () => {
     it('sets a CSS property on the element', () => {
@@ -181,8 +165,6 @@ describe('Dom', () => {
     });
   });
 
-  // ─── removeStyle ───────────────────────────────────────────────────────────
-
   describe('removeStyle', () => {
     it('clears a CSS property by setting it to an empty string', () => {
       container.style.setProperty('color', 'red');
@@ -191,38 +173,36 @@ describe('Dom', () => {
     });
   });
 
-  // ─── createElement ─────────────────────────────────────────────────────────
-
   describe('createElement', () => {
     it('creates an element of the given tag type', () => {
-      const el = Dom.createElement('span');
-      expect(el.tagName).toBe('SPAN');
+      const element = Dom.createElement('span');
+      expect(element.tagName).toBe('SPAN');
     });
 
     it('sets the id attribute', () => {
-      const el = Dom.createElement('div', { id: 'my-id' });
-      expect(el.id).toBe('my-id');
+      const element = Dom.createElement('div', { id: 'my-id' });
+      expect(element.id).toBe('my-id');
     });
 
     it('sets classes from an array', () => {
-      const el = Dom.createElement('div', { classes: ['a', 'b'] });
-      expect(el.classList.contains('a')).toBe(true);
-      expect(el.classList.contains('b')).toBe(true);
+      const element = Dom.createElement('div', { classes: ['a', 'b'] });
+      expect(element.classList.contains('a')).toBe(true);
+      expect(element.classList.contains('b')).toBe(true);
     });
 
     it('sets textContent', () => {
-      const el = Dom.createElement('div', { text: 'hello' });
-      expect(el.textContent).toBe('hello');
+      const element = Dom.createElement('div', { text: 'hello' });
+      expect(element.textContent).toBe('hello');
     });
 
     it('sets innerHTML', () => {
-      const el = Dom.createElement('div', { html: '<span>hi</span>' });
-      expect(el.innerHTML).toBe('<span>hi</span>');
+      const element = Dom.createElement('div', { html: '<span>hi</span>' });
+      expect(element.innerHTML).toBe('<span>hi</span>');
     });
 
     it('sets dataset attributes', () => {
-      const el = Dom.createElement('div', { dataset: { foo: 'bar' } });
-      expect(el.dataset.foo).toBe('bar');
+      const element = Dom.createElement('div', { dataset: { foo: 'bar' } });
+      expect(element.dataset.foo).toBe('bar');
     });
 
     it('appends the element to a parent when appendTo is provided', () => {
@@ -235,12 +215,40 @@ describe('Dom', () => {
     });
 
     it('sets arbitrary attributes via the default case', () => {
-      const el = Dom.createElement('a', { href: 'https://example.com' } as any);
-      expect(el.getAttribute('href')).toBe('https://example.com');
+      const element = Dom.createElement('a', { href: 'https://example.com' } as any);
+      expect(element.getAttribute('href')).toBe('https://example.com');
+    });
+
+    it('skips setAttribute when option key is an empty string', () => {
+      const element = Dom.createElement('div', { '': 'value' } as any);
+      expect(element.hasAttribute('')).toBe(false);
+    });
+
+    it('ignores an empty id option', () => {
+      const element = Dom.createElement('div', { id: '' });
+      expect(element.id).toBe('');
+    });
+
+    it('ignores an empty classes option', () => {
+      const element = Dom.createElement('div', { classes: [] });
+      expect(element.classList.length).toBe(0);
+    });
+
+    it('ignores an empty text option', () => {
+      const element = Dom.createElement('div', { text: '' });
+      expect(element.textContent).toBe('');
+    });
+
+    it('ignores an empty html option', () => {
+      const element = Dom.createElement('div', { html: '' });
+      expect(element.innerHTML).toBe('');
+    });
+
+    it('ignores an empty dataset option', () => {
+      const element = Dom.createElement('div', { dataset: {} });
+      expect(Object.keys(element.dataset)).toHaveLength(0);
     });
   });
-
-  // ─── hideElement ───────────────────────────────────────────────────────────
 
   describe('hideElement', () => {
     it('sets display:none when no hiddenClass is provided', () => {
@@ -255,8 +263,6 @@ describe('Dom', () => {
       expect(container.style.getPropertyValue('display')).toBe('');
     });
   });
-
-  // ─── showElement ───────────────────────────────────────────────────────────
 
   describe('showElement', () => {
     it('sets display to "block" by default when no showClass is provided', () => {
@@ -276,8 +282,6 @@ describe('Dom', () => {
       expect(container.style.getPropertyValue('display')).toBe('');
     });
   });
-
-  // ─── findParent ────────────────────────────────────────────────────────────
 
   describe('findParent', () => {
     it('finds an ancestor matching a class selector', () => {
@@ -305,9 +309,9 @@ describe('Dom', () => {
     it('returns null when the iteration limit is exhausted', () => {
       // iterationLimit=1 means: ++currentIterationCount (→1) <= 1, so it
       // returns null immediately on the first call.
-      const el = document.createElement('div');
-      container.appendChild(el);
-      expect(Dom.findParent(el, '.nonexistent', 1)).toBeNull();
+      const element = document.createElement('div');
+      container.appendChild(element);
+      expect(Dom.findParent(element, '.nonexistent', 1)).toBeNull();
     });
 
     it('throws for a plain tag-name selector (not . or #)', () => {
@@ -315,9 +319,20 @@ describe('Dom', () => {
       container.appendChild(inner);
       expect(() => Dom.findParent(inner, 'div')).toThrow('not valid');
     });
-  });
 
-  // ─── getParent ─────────────────────────────────────────────────────────────
+    it('recurses through multiple ancestor levels to find a matching element', () => {
+      const grandparent = document.createElement('div');
+      grandparent.classList.add('target');
+      const parent = document.createElement('div');
+      const child = document.createElement('div');
+      grandparent.appendChild(parent);
+      parent.appendChild(child);
+      container.appendChild(grandparent);
+
+      const result = Dom.findParent(child, '.target');
+      expect(result).toBe(grandparent);
+    });
+  });
 
   describe('getParent', () => {
     it('navigates up exactly N levels in the DOM', () => {
@@ -338,47 +353,41 @@ describe('Dom', () => {
     });
   });
 
-  // ─── isInViewport ──────────────────────────────────────────────────────────
-
   describe('isInViewport', () => {
     it('returns true in happy-dom (zero-rect element at zero-size viewport)', () => {
-      const el = document.createElement('div');
-      container.appendChild(el);
+      const element = document.createElement('div');
+      container.appendChild(element);
       // In happy-dom all rect coords are 0 and viewport dims are 0,
       // so 0>=0, 0>=0, 0<=0, 0<=0 → all viewport conditions pass → true
-      expect(Dom.isInViewport(el)).toBe(true);
+      expect(Dom.isInViewport(element)).toBe(true);
     });
   });
-
-  // ─── scrollToElement ───────────────────────────────────────────────────────
 
   describe('scrollToElement', () => {
     it('calls window.scrollTo', () => {
       const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-      const el = document.createElement('div');
-      container.appendChild(el);
-      Dom.scrollToElement(el, 0);
+      const element = document.createElement('div');
+      container.appendChild(element);
+      Dom.scrollToElement(element, 0);
       expect(scrollTo).toHaveBeenCalled();
     });
 
     it('invokes the optional callback once', () => {
       vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-      const cb = vi.fn();
-      const el = document.createElement('div');
-      container.appendChild(el);
-      Dom.scrollToElement(el, 0, cb);
-      expect(cb).toHaveBeenCalledTimes(1);
+      const callback = vi.fn();
+      const element = document.createElement('div');
+      container.appendChild(element);
+      Dom.scrollToElement(element, 0, callback);
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
     it('does not throw when callback is null', () => {
       vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-      const el = document.createElement('div');
-      container.appendChild(el);
-      expect(() => Dom.scrollToElement(el, 0, null)).not.toThrow();
+      const element = document.createElement('div');
+      container.appendChild(element);
+      expect(() => Dom.scrollToElement(element, 0, null)).not.toThrow();
     });
   });
-
-  // ─── extractTextFromNodes ──────────────────────────────────────────────────
 
   describe('extractTextFromNodes', () => {
     it('concatenates string children from a flat list of virtual nodes', () => {
@@ -405,77 +414,67 @@ describe('Dom', () => {
     });
   });
 
-  // ─── getRect ───────────────────────────────────────────────────────────────
-
   describe('getRect', () => {
     it('returns a DOMRect for the element', () => {
-      const el = document.createElement('div');
-      container.appendChild(el);
-      const rect = Dom.getRect(el);
+      const element = document.createElement('div');
+      container.appendChild(element);
+      const rect = Dom.getRect(element);
       expect(rect).toBeInstanceOf(DOMRect);
     });
   });
 
-  // ─── getRects ──────────────────────────────────────────────────────────────
-
   describe('getRects', () => {
     it('returns an array of DOMRects, one per element', () => {
-      const a = document.createElement('div');
-      const b = document.createElement('div');
-      container.appendChild(a);
-      container.appendChild(b);
-      const rects = Dom.getRects(a, b);
+      const elementA = document.createElement('div');
+      const elementB = document.createElement('div');
+      container.appendChild(elementA);
+      container.appendChild(elementB);
+      const rects = Dom.getRects(elementA, elementB);
       expect(rects).toHaveLength(2);
       expect(rects[0]).toBeInstanceOf(DOMRect);
       expect(rects[1]).toBeInstanceOf(DOMRect);
     });
   });
 
-  // ─── rectsOverlap ──────────────────────────────────────────────────────────
-
   describe('rectsOverlap', () => {
     it('returns true for two overlapping rectangles', () => {
-      const a = new DOMRect(0, 0, 100, 100);
-      const b = new DOMRect(50, 50, 100, 100);
-      expect(Dom.rectsOverlap(a, b)).toBe(true);
+      const elementA = new DOMRect(0, 0, 100, 100);
+      const elementB = new DOMRect(50, 50, 100, 100);
+      expect(Dom.rectsOverlap(elementA, elementB)).toBe(true);
     });
 
     it('returns false for two non-overlapping rectangles', () => {
-      const a = new DOMRect(0, 0, 100, 100);
-      const b = new DOMRect(200, 200, 100, 100);
-      expect(Dom.rectsOverlap(a, b)).toBe(false);
+      const elementA = new DOMRect(0, 0, 100, 100);
+      const elementB = new DOMRect(200, 200, 100, 100);
+      expect(Dom.rectsOverlap(elementA, elementB)).toBe(false);
     });
 
     it('returns false for rectangles that only touch on an edge (right==left)', () => {
       // rectA.right (100) <= rectB.left (100) → no overlap
-      const a = new DOMRect(0, 0, 100, 100);
-      const b = new DOMRect(100, 0, 100, 100);
-      expect(Dom.rectsOverlap(a, b)).toBe(false);
+      const elementA = new DOMRect(0, 0, 100, 100);
+      const elementB = new DOMRect(100, 0, 100, 100);
+      expect(Dom.rectsOverlap(elementA, elementB)).toBe(false);
     });
   });
-
-  // ─── isOverlapping ─────────────────────────────────────────────────────────
 
   describe('isOverlapping', () => {
     it('returns false for two zero-size elements in happy-dom', () => {
-      const a = document.createElement('div');
-      const b = document.createElement('div');
-      container.appendChild(a);
-      container.appendChild(b);
+      const elementA = document.createElement('div');
+      const elementB = document.createElement('div');
+      container.appendChild(elementA);
+      container.appendChild(elementB);
       // In happy-dom getBoundingClientRect returns {0,0,0,0}, so
       // rectA.right(0) <= rectB.left(0) → true → no overlap → false
-      expect(Dom.isOverlapping(a, b)).toBe(false);
+      expect(Dom.isOverlapping(elementA, elementB)).toBe(false);
     });
   });
 
-  // ─── isPointerInside ───────────────────────────────────────────────────────
-
   describe('isPointerInside', () => {
     it('returns false when the element is not hovered', () => {
-      const el = document.createElement('div');
-      container.appendChild(el);
+      const element = document.createElement('div');
+      container.appendChild(element);
       // In happy-dom no element is `:hover` by default
-      expect(Dom.isPointerInside(el)).toBe(false);
+      expect(Dom.isPointerInside(element)).toBe(false);
     });
   });
 });

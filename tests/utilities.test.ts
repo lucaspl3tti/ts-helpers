@@ -18,14 +18,14 @@ describe('Utilities', () => {
     afterEach(() => { vi.useRealTimers(); });
 
     it('calls function only after delay', () => {
-      const fn = vi.fn();
-      const debounced = Utilities.debounce(fn, 100);
+      const callback = vi.fn();
+      const debounced = Utilities.debounce(callback, 100);
       debounced();
       debounced();
       debounced();
-      expect(fn).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
       vi.advanceTimersByTime(100);
-      expect(fn).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -82,41 +82,57 @@ describe('Utilities', () => {
       expect(Utilities.isEmpty({ a: 1 })).toBe(false);
     });
 
-    it('returns true for empty FormData (via Object path)', () => {
+    it('returns true for empty FormData', () => {
       expect(Utilities.isEmpty(new FormData())).toBe(true);
+    });
+
+    it('returns false for non-empty FormData', () => {
+      const formData = new FormData();
+      formData.append('key', 'value');
+      expect(Utilities.isEmpty(formData)).toBe(false);
+    });
+
+    it('returns false for a truthy primitive (number)', () => {
+      expect(Utilities.isEmpty(42 as any)).toBe(false);
     });
   });
 
   describe('iterate', () => {
     it('iterates over an array', () => {
       const result: number[] = [];
-      Utilities.iterate([1, 2, 3], (v) => result.push(v));
+      Utilities.iterate([1, 2, 3], (number) => result.push(number));
       expect(result).toEqual([1, 2, 3]);
     });
 
     it('iterates over a Map', () => {
       const result: string[] = [];
-      Utilities.iterate(new Map([['a', 1], ['b', 2]]), (v, k) => result.push(`${k}:${v}`));
+      Utilities.iterate(
+        new Map([['a', 1], ['b', 2]]),
+        (value, key) => result.push(`${key}:${value}`),
+      );
       expect(result).toEqual(['a:1', 'b:2']);
     });
 
     it('iterates over a plain object', () => {
       const result: string[] = [];
-      Utilities.iterate({ x: 1, y: 2 }, (v, k) => result.push(`${k}=${v}`));
+      Utilities.iterate(
+        { x: 1, y: 2 },
+        (value, key) => result.push(`${key}=${value}`),
+      );
       expect(result).toEqual(['x=1', 'y=2']);
     });
 
     it('iterates over a string character by character', () => {
       const chars: string[] = [];
-      Utilities.iterate('abc', (c) => chars.push(c));
+      Utilities.iterate('abc', (char: string) => chars.push(char));
       expect(chars).toEqual(['a', 'b', 'c']);
     });
 
     it('iterates over FormData', () => {
-      const fd = new FormData();
-      fd.append('key', 'value');
+      const formData = new FormData();
+      formData.append('key', 'value');
       const result: string[] = [];
-      Utilities.iterate(fd, (v, k) => result.push(`${k}:${v}`));
+      Utilities.iterate(formData, (value, key) => result.push(`${key}:${value}`));
       expect(result).toEqual(['key:value']);
     });
 
@@ -127,20 +143,20 @@ describe('Utilities', () => {
 
   describe('getFormDataFromJson', () => {
     it('converts flat object to FormData', () => {
-      const fd = Utilities.getFormDataFromJson({ name: 'Alice', age: '30' });
-      expect(fd.get('name')).toBe('Alice');
-      expect(fd.get('age')).toBe('30');
+      const formData = Utilities.getFormDataFromJson({ name: 'Alice', age: '30' });
+      expect(formData.get('name')).toBe('Alice');
+      expect(formData.get('age')).toBe('30');
     });
 
     it('handles nested objects with dot notation', () => {
-      const fd = Utilities.getFormDataFromJson({ user: { name: 'Bob' } });
-      expect(fd.get('user.name')).toBe('Bob');
+      const formData = Utilities.getFormDataFromJson({ user: { name: 'Bob' } });
+      expect(formData.get('user.name')).toBe('Bob');
     });
 
     it('silently drops falsy values', () => {
-      const fd = Utilities.getFormDataFromJson({ name: 'Alice', count: 0 as any });
-      expect(fd.get('name')).toBe('Alice');
-      expect(fd.get('count')).toBeNull();
+      const formData = Utilities.getFormDataFromJson({ name: 'Alice', count: 0 as any });
+      expect(formData.get('name')).toBe('Alice');
+      expect(formData.get('count')).toBeNull();
     });
   });
 
@@ -149,55 +165,55 @@ describe('Utilities', () => {
     afterEach(() => { vi.useRealTimers(); });
 
     it('calls function at most once per interval', () => {
-      const fn = vi.fn();
-      const throttled = Utilities.throttle(fn, 100);
+      const callback = vi.fn();
+      const throttled = Utilities.throttle(callback, 100);
       throttled();
       throttled();
       throttled();
-      expect(fn).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledTimes(1);
       vi.advanceTimersByTime(100);
       throttled();
-      expect(fn).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('memoize', () => {
     it('returns cached result on repeated calls', () => {
-      const fn = vi.fn((x: number) => x * 2);
-      const memoized = Utilities.memoize(fn);
+      const callback = vi.fn((index: number) => index * 2);
+      const memoized = Utilities.memoize(callback);
       expect(memoized(5)).toBe(10);
       expect(memoized(5)).toBe(10);
-      expect(fn).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
     it('calls function again with different args', () => {
-      const fn = vi.fn((x: number) => x * 2);
-      const memoized = Utilities.memoize(fn);
+      const callback = vi.fn((index: number) => index * 2);
+      const memoized = Utilities.memoize(callback);
       memoized(1);
       memoized(2);
-      expect(fn).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('pipe', () => {
     it('applies functions left to right', () => {
-      const add1 = (x: number) => x + 1;
-      const double = (x: number) => x * 2;
+      const add1 = (index: number) => index + 1;
+      const double = (index: number) => index * 2;
       expect(Utilities.pipe(add1, double)(3)).toBe(8);
     });
   });
 
   describe('compose', () => {
     it('applies functions right to left', () => {
-      const add1 = (x: number) => x + 1;
-      const double = (x: number) => x * 2;
+      const add1 = (index: number) => index + 1;
+      const double = (index: number) => index * 2;
       expect(Utilities.compose(add1, double)(3)).toBe(7);
     });
   });
 
   describe('getRandomNumber', () => {
     it('returns a number within the given range', () => {
-      for (let i = 0; i < 50; i++) {
+      for (let index = 0; index < 50; index++) {
         const result = Utilities.getRandomNumber(1, 10);
         expect(result).toBeGreaterThanOrEqual(1);
         expect(result).toBeLessThanOrEqual(10);
@@ -271,25 +287,55 @@ describe('Utilities', () => {
 
     it('respects minUppercase constraint', () => {
       const result = Utilities.generateRandomText(10, { minUppercase: 3 });
-      const upperCount = result.split('').filter(c => c >= 'A' && c <= 'Z').length;
+      const upperCount = result.split('').filter(char => char >= 'A' && char <= 'Z').length;
       expect(upperCount).toBeGreaterThanOrEqual(3);
     });
 
     it('respects minLowercase constraint', () => {
       const result = Utilities.generateRandomText(10, { minLowercase: 3 });
-      const lowerCount = result.split('').filter(c => c >= 'a' && c <= 'z').length;
+      const lowerCount = result.split('').filter(char => char >= 'a' && char <= 'z').length;
       expect(lowerCount).toBeGreaterThanOrEqual(3);
     });
 
     it('respects minNumbers constraint', () => {
       const result = Utilities.generateRandomText(10, { minNumbers: 3 });
-      const numCount = result.split('').filter(c => c >= '0' && c <= '9').length;
+      const numCount = result.split('').filter(char => char >= '0' && char <= '9').length;
       expect(numCount).toBeGreaterThanOrEqual(3);
     });
 
     it('increases length when requirements exceed it', () => {
       const result = Utilities.generateRandomText(2, { minUppercase: 3, minLowercase: 3 });
       expect(result.length).toBeGreaterThanOrEqual(6);
+    });
+  });
+
+  describe('numberIsEven', () => {
+    it('returns true for an even number', () => {
+      expect(Utilities.numberIsEven(4)).toBe(true);
+    });
+
+    it('returns false for an odd number', () => {
+      expect(Utilities.numberIsEven(3)).toBe(false);
+    });
+  });
+
+  describe('numberIsOdd', () => {
+    it('returns true for an odd number', () => {
+      expect(Utilities.numberIsOdd(7)).toBe(true);
+    });
+
+    it('returns false for an even number', () => {
+      expect(Utilities.numberIsOdd(8)).toBe(false);
+    });
+  });
+
+  describe('isValidEmail', () => {
+    it('returns true for a valid email address', () => {
+      expect(Utilities.isValidEmail('user@example.com')).toBe(true);
+    });
+
+    it('returns false for an invalid email address', () => {
+      expect(Utilities.isValidEmail('not-an-email')).toBe(false);
     });
   });
 });

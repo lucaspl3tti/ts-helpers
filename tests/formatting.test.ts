@@ -40,7 +40,8 @@ describe('Formatting', () => {
     });
 
     it('truncates at word boundary by default', () => {
-      expect(Formatting.truncateString('Hello, World! This is a long text.', 20)).toBe('Hello, World! This\u2026');
+      expect(Formatting.truncateString('Hello, World! This is a long text.', 20))
+        .toBe('Hello, World! This\u2026');
     });
 
     it('truncates mid-word when useWordBoundary is false', () => {

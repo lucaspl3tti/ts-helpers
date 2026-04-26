@@ -1,10 +1,14 @@
 import Utilities from './utilities.helper';
+import type { ComparableKeys } from '../types/base.types';
 
 /**
  * ArrayAccess provides utility methods for easily accessing and manipulating arrays
  */
 export default class ArrayAccess {
-  static first<Type>(array: Type[], amount = 1): Type|Type[]|undefined {
+  static first<Type>(array: Type[], amount: 1): Type | undefined;
+  static first<Type>(array: Type[], amount: number): Type[];
+  static first<Type>(array: Type[]): Type | undefined;
+  static first<Type>(array: Type[], amount = 1): Type | Type[] | undefined {
     if (amount === 1) {
       return array[0];
     }
@@ -12,7 +16,10 @@ export default class ArrayAccess {
     return array.slice(0, amount);
   }
 
-  static last<Type>(array: Type[], amount = 1): Type|Type[]|undefined {
+  static last<Type>(array: Type[], amount: 1): Type | undefined;
+  static last<Type>(array: Type[], amount: number): Type[];
+  static last<Type>(array: Type[]): Type | undefined;
+  static last<Type>(array: Type[], amount = 1): Type | Type[] | undefined {
     if (amount === 1) {
       return array[array.length - 1];
     }
@@ -24,17 +31,17 @@ export default class ArrayAccess {
     return array.flat(depth) as Type[];
   }
 
-  static sortByProperty<Type, Key extends keyof Type>(
+  static sortByProperty<Type, Key extends ComparableKeys<Type>>(
     array: Type[],
     property: Key,
     direction: 'asc' | 'desc' = 'asc',
   ): Type[] {
-    return [...array].sort((a, b) => {
-      if (a[property] > b[property]) {
+    return [...array].sort((itemA, itemB) => {
+      if (itemA[property] > itemB[property]) {
         return direction === 'asc' ? 1 : -1;
       }
 
-      if (a[property] < b[property]) {
+      if (itemA[property] < itemB[property]) {
         return direction === 'asc' ? -1 : 1;
       }
 
@@ -42,7 +49,7 @@ export default class ArrayAccess {
     });
   }
 
-  static getObjectByValue<Type extends object, Key extends keyof Type>(
+  static getObjectByValue<Type extends Record<string, unknown>, Key extends keyof Type>(
     array: Type[],
     key: Key,
     value: Type[Key],
@@ -50,10 +57,10 @@ export default class ArrayAccess {
     return array.find((item) => item[key] === value);
   }
 
-  static hasObjectWithValue<Type>(
+  static hasObjectWithValue<Type, Key extends keyof Type>(
     array: Type[],
-    key: keyof Type,
-    value: Type[keyof Type],
+    key: Key,
+    value: Type[Key],
   ): boolean {
     return array.some((item) => item[key] === value);
   }
@@ -120,8 +127,8 @@ export default class ArrayAccess {
 
     const result: Type[][] = [];
 
-    for (let i = 0; i < array.length; i += size) {
-      result.push(array.slice(i, i + size));
+    for (let index = 0; index < array.length; index += size) {
+      result.push(array.slice(index, index + size));
     }
 
     return result;
@@ -131,8 +138,8 @@ export default class ArrayAccess {
     return [...new Set(array)];
   }
 
-  static uniqueBy<Type>(array: Type[], key: keyof Type): Type[] {
-    const seen = new Set();
+  static uniqueBy<Type, Key extends keyof Type>(array: Type[], key: Key): Type[] {
+    const seen = new Set<Type[Key]>();
     return array.filter((item) => {
       const value = item[key];
 
@@ -145,7 +152,7 @@ export default class ArrayAccess {
     });
   }
 
-  static groupBy<Type>(array: Type[], key: keyof Type): Record<string, Type[]> {
+  static groupBy<Type, Key extends keyof Type>(array: Type[], key: Key): Record<string, Type[]> {
     return array.reduce((groups, item) => {
       const groupKey = String(item[key]);
       if (!groups[groupKey]) {
@@ -156,28 +163,25 @@ export default class ArrayAccess {
     }, {} as Record<string, Type[]>);
   }
 
-  static zip<A, B>(a: A[], b: B[]): [A, B][] {
-    const length = Math.min(a.length, b.length);
-    const result: [A, B][] = [];
-
-    for (let index = 0; index < length; index++) {
-      result.push([a[index]!, b[index]!]);
-    }
-
-    return result;
+  static zip<A, B>(itemA: A[], itemB: B[]): [A, B][] {
+    const length = Math.min(itemA.length, itemB.length);
+    return Array.from({ length }, (value, index) => [
+      itemA[index] as A,
+      itemB[index] as B,
+    ] as [A, B]);
   }
 
-  static intersection<Type>(a: Type[], b: Type[]): Type[] {
-    const setB = new Set(b);
-    return a.filter((item) => setB.has(item));
+  static intersection<Type>(itemA: Type[], itemB: Type[]): Type[] {
+    const setB = new Set(itemB);
+    return itemA.filter((item) => setB.has(item));
   }
 
-  static difference<Type>(a: Type[], b: Type[]): Type[] {
-    const setB = new Set(b);
-    return a.filter((item) => !setB.has(item));
+  static difference<Type>(itemA: Type[], itemB: Type[]): Type[] {
+    const setB = new Set(itemB);
+    return itemA.filter((item) => !setB.has(item));
   }
 
-  static union<Type>(a: Type[], b: Type[]): Type[] {
-    return this.unique([...a, ...b]);
+  static union<Type>(itemA: Type[], itemB: Type[]): Type[] {
+    return this.unique([...itemA, ...itemB]);
   }
 }

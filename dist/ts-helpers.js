@@ -66,20 +66,9 @@ class b {
 }
 class u {
   // ## General utility functions
-  /**
-   * Block scope for a given amount of time in ms and run next set piece of
-   * code only after given time has passed
-   *
-   * @NOTE: Must be called with await!
-   */
   static delay(t) {
     return new Promise((e) => setTimeout(e, t));
   }
-  /**
-   * Debounce a function call to prevent it from being called too frequently.
-   * The function will only be called after the specified delay has passed
-   * since the last call.
-   */
   static debounce(t, e) {
     let r = null;
     return function(...n) {
@@ -89,7 +78,7 @@ class u {
     };
   }
   static isEmpty(t) {
-    return t ? typeof t == "string" ? t.trim() === "" : Array.isArray(t) ? t.length === 0 : t instanceof Map || t instanceof Set ? t.size === 0 : t instanceof Object ? b.length(t) === 0 : t instanceof FormData ? ![...t.keys()].length || [...t.keys()].length === 0 : !1 : !0;
+    return t ? typeof t == "string" ? t.trim() === "" : Array.isArray(t) ? t.length === 0 : t instanceof FormData ? ![...t.keys()].length || [...t.keys()].length === 0 : t instanceof Map || t instanceof Set ? t.size === 0 : t instanceof Object ? b.length(t) === 0 : !1 : !0;
   }
   static iterate(t, e) {
     if (t instanceof Map || Array.isArray(t))
@@ -117,7 +106,7 @@ class u {
       s && (typeof s == "object" ? this.getFormDataFromJson(
         s,
         i
-      ).forEach((c, o) => r.append(o, c)) : r.append(i, s.toString()));
+      ).forEach((c, o) => r.append(o, c)) : r.append(i, String(s)));
     }), r;
   }
   static throttle(t, e) {
@@ -271,10 +260,11 @@ class E {
     }, {});
   }
   static zip(t, e) {
-    const r = Math.min(t.length, e.length), n = [];
-    for (let s = 0; s < r; s++)
-      n.push([t[s], e[s]]);
-    return n;
+    const r = Math.min(t.length, e.length);
+    return Array.from({ length: r }, (n, s) => [
+      t[s],
+      e[s]
+    ]);
   }
   static intersection(t, e) {
     const r = new Set(e);
@@ -318,23 +308,17 @@ class A {
         break;
       case "rgb":
       case "rgba":
-        r = this.parseRgbStringToObject(
-          t
-        );
+        r = this.parseRgbStringToObject(t);
         break;
       case "hsl":
       case "hsla":
-        r = this.hslToRgb(
-          t
-        );
+        r = this.hslToRgb(t);
         break;
       default:
         return console.warn(`Unsupported color format: ${t}`), "#000";
     }
     return r ? (r.red * 299 + r.green * 587 + r.blue * 114) / 1e3 > 128 ? "#000" : "#fff" : (console.warn(`Could not convert color to RGB: ${t}`), "#000");
   }
-  // **Format to RGB/A functions**
-  // Convert a hex code into a RGB/A object or string
   static hexToRgb(t, e = "object") {
     let r = t.replace(/^#/, "");
     r.length === 3 && (r = r.split("").map((o) => o + o).join(""));
@@ -352,7 +336,6 @@ class A {
     const n = parseInt(r[1], 10), s = parseInt(r[3], 10), i = parseInt(r[5], 10), a = r[7] ? parseFloat(r[7]) : void 0;
     return { red: n, green: s, blue: i, alpha: a };
   }
-  // Converts an HSL(A) string to an RGB(A) object
   static hslToRgb(t, e = "object") {
     const r = /^hsla?\(\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)%\s*,\s*(-?\d+(\.\d+)?)%(?:\s*,\s*(0|0?\.\d+|1))?\s*\)$/, n = t.match(r);
     if (!n || !n[1] || !n[3] || !n[5])
@@ -388,8 +371,6 @@ class A {
     const e = this.hslToRgb(t);
     return e ? this.rgbToHex(e) : null;
   }
-  // **Format to hsl object functions**
-  // Converts an RGB object to an HSL object or string
   static rgbToHsl(t, e = "object") {
     const r = this.parseRgbStringToObject(t);
     if (!r)
@@ -402,15 +383,11 @@ class A {
       const f = Math.max(0, Math.min(1, r.alpha));
       return e === "object" ? { hue: d, saturation: p, lightness: m, alpha: f } : `hsla(${d}, ${p}, ${m}, ${f})`;
     }
-    return { hue: d, saturation: p, lightness: m };
+    return e === "object" ? { hue: d, saturation: p, lightness: m } : `hsl(${d}, ${p}, ${m})`;
   }
-  // Converts an Hex Code to an HSL object or string
   static hexToHsl(t, e = "object") {
-    const r = this.hexToRgb(
-      t,
-      "string"
-    );
-    return r ? this.rgbToHsl(r, e) : null;
+    const r = this.hexToRgb(t, "string");
+    return r ? e === "string" ? this.rgbToHsl(r, "string") : this.rgbToHsl(r) : null;
   }
 }
 class C {

@@ -1,4 +1,4 @@
-import type { HeadingType, JsonObject, RandomTextOptions } from '../interfaces/general.interface';
+import type { HeadingType, RandomTextOptions } from '../types/base.types';
 import ObjectAccess from './object-access.helper';
 
 /**
@@ -6,22 +6,11 @@ import ObjectAccess from './object-access.helper';
  */
 export default class Utilities {
   // ## General utility functions
-  /**
-   * Block scope for a given amount of time in ms and run next set piece of
-   * code only after given time has passed
-   *
-   * @NOTE: Must be called with await!
-   */
   static delay(milliseconds: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
-  /**
-   * Debounce a function call to prevent it from being called too frequently.
-   * The function will only be called after the specified delay has passed
-   * since the last call.
-   */
-  static debounce<Type extends (...args: any[]) => void>(
+  static debounce<Type extends (...args: unknown[]) => void>(
     callback: Type,
     delay: number,
   ): (...args: Parameters<Type>) => void {
@@ -51,16 +40,16 @@ export default class Utilities {
       return value.length === 0;
     }
 
+    if (value instanceof FormData) {
+      return ![...value.keys()].length || [...value.keys()].length === 0;
+    }
+
     if (value instanceof Map || value instanceof Set) {
       return value.size === 0;
     }
 
     if (value instanceof Object) {
       return ObjectAccess.length(value) === 0;
-    }
-
-    if (value instanceof FormData) {
-      return ![...value.keys()].length || [...value.keys()].length === 0;
     }
 
     return false;
@@ -101,7 +90,7 @@ export default class Utilities {
   }
 
   static getFormDataFromJson(
-    jsonObject: JsonObject,
+    jsonObject: Record<string, unknown>,
     parentKey: string = '',
   ): FormData {
     const formData = new FormData();
@@ -113,13 +102,13 @@ export default class Utilities {
         if (typeof value === 'object') {
           // Recursively handle nested objects
           const nestedFormData = this.getFormDataFromJson(
-            value as JsonObject,
+            value as Record<string, unknown>,
             fullKey,
           );
 
           nestedFormData.forEach((value, key) => formData.append(key, value));
         } else {
-          formData.append(fullKey, value.toString());
+          formData.append(fullKey, String(value));
         }
       }
     });
@@ -127,7 +116,10 @@ export default class Utilities {
     return formData;
   }
 
-  static throttle<Type extends (...args: any[]) => void>(fn: Type, milliseconds: number): Type {
+  static throttle<Type extends (...args: unknown[]) => void>(
+    callback: Type,
+    milliseconds: number,
+  ): Type {
     let lastCall = 0;
 
     return function(...args: Parameters<Type>): void {
@@ -135,12 +127,12 @@ export default class Utilities {
 
       if (now - lastCall >= milliseconds) {
         lastCall = now;
-        fn(...args);
+        callback(...args);
       }
     } as Type;
   }
 
-  static memoize<Type extends (...args: any[]) => any>(fn: Type): Type {
+  static memoize<Type extends (...args: unknown[]) => unknown>(callback: Type): Type {
     const cache = new Map<string, ReturnType<Type>>();
 
     return function(...args: Parameters<Type>): ReturnType<Type> {
@@ -150,18 +142,18 @@ export default class Utilities {
         return cache.get(key) as ReturnType<Type>;
       }
 
-      const result = fn(...args) as ReturnType<Type>;
+      const result = callback(...args) as ReturnType<Type>;
       cache.set(key, result);
       return result;
     } as Type;
   }
 
-  static pipe<Type>(...fns: Array<(arg: Type) => Type>): (arg: Type) => Type {
-    return (arg: Type): Type => fns.reduce((acc, fn) => fn(acc), arg);
+  static pipe<Type>(...callbacks: Array<(arg: Type) => Type>): (arg: Type) => Type {
+    return (arg: Type): Type => callbacks.reduce((acc, callback) => callback(acc), arg);
   }
 
-  static compose<Type>(...fns: Array<(arg: Type) => Type>): (arg: Type) => Type {
-    return (arg: Type): Type => fns.reduceRight((acc, fn) => fn(acc), arg);
+  static compose<Type>(...callbacks: Array<(arg: Type) => Type>): (arg: Type) => Type {
+    return (arg: Type): Type => callbacks.reduceRight((acc, callback) => callback(acc), arg);
   }
 
   // ## Number utility functions
@@ -251,7 +243,7 @@ export default class Utilities {
 
     const remainingLength = length - result.length;
 
-    for (let i = 0; i < remainingLength; i++) {
+    for (let index = 0; index < remainingLength; index++) {
       result.push(allCharacters.charAt(this.getRandomNumber(0, allCharacters.length - 1)));
     }
 

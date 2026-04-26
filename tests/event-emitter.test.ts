@@ -9,9 +9,9 @@ describe('NativeEventEmitter', () => {
     });
 
     it('uses provided element', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
-      expect(emitter.element).toBe(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
+      expect(emitter.element).toBe(element);
     });
 
     it('initializes with empty listeners array', () => {
@@ -20,18 +20,18 @@ describe('NativeEventEmitter', () => {
     });
 
     it('sets $emitter on the element', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
-      expect(el.$emitter).toBe(emitter);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
+      expect(element.$emitter).toBe(emitter);
     });
   });
 
   describe('element getter/setter', () => {
     it('allows updating the element', () => {
       const emitter = new NativeEventEmitter();
-      const el = document.createElement('div');
-      emitter.element = el;
-      expect(emitter.element).toBe(el);
+      const element = document.createElement('div');
+      emitter.element = element;
+      expect(emitter.element).toBe(element);
     });
   });
 
@@ -47,42 +47,42 @@ describe('NativeEventEmitter', () => {
 
   describe('publish', () => {
     it('dispatches a custom event', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const handler = vi.fn();
-      el.addEventListener('my-event', handler);
+      element.addEventListener('my-event', handler);
       emitter.publish('my-event');
       expect(handler).toHaveBeenCalledTimes(1);
     });
 
     it('includes detail data in the event', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       let received: any;
-      el.addEventListener('data-event', (e: Event) => {
-        received = (e as CustomEvent).detail;
+      element.addEventListener('data-event', (event: Event) => {
+        received = (event as CustomEvent).detail;
       });
       emitter.publish('data-event', { value: 42 });
       expect(received).toEqual({ value: 42 });
     });
 
     it('returns the dispatched CustomEvent', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const event = emitter.publish('test-event');
       expect(event).toBeInstanceOf(CustomEvent);
     });
 
     it('defaults cancelable to false', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const event = emitter.publish('test-event');
       expect(event.cancelable).toBe(false);
     });
 
     it('respects cancelable option when set to true', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const event = emitter.publish('test-event', {}, true);
       expect(event.cancelable).toBe(true);
     });
@@ -90,8 +90,8 @@ describe('NativeEventEmitter', () => {
 
   describe('subscribe', () => {
     it('registers a listener and calls it when event is published', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const handler = vi.fn();
       emitter.subscribe('my-event', handler);
       emitter.publish('my-event');
@@ -105,8 +105,8 @@ describe('NativeEventEmitter', () => {
     });
 
     it('supports once option — fires only once', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const handler = vi.fn();
       emitter.subscribe('my-event', handler, { once: true });
       emitter.publish('my-event');
@@ -121,8 +121,8 @@ describe('NativeEventEmitter', () => {
     });
 
     it('supports scope option — binds callback to given scope', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const scope = { name: 'test-scope' };
       let capturedThis: any;
       emitter.subscribe(
@@ -143,8 +143,8 @@ describe('NativeEventEmitter', () => {
 
   describe('unsubscribe', () => {
     it('removes the listener and stops receiving events', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const handler = vi.fn();
       emitter.subscribe('my-event', handler);
       emitter.unsubscribe('my-event');
@@ -161,8 +161,8 @@ describe('NativeEventEmitter', () => {
     });
 
     it('only removes matching listeners', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const handlerA = vi.fn();
       const handlerB = vi.fn();
       emitter.subscribe('event-a', handlerA);
@@ -174,8 +174,8 @@ describe('NativeEventEmitter', () => {
     });
 
     it('matches dotted event names by sorted parts', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const handler = vi.fn();
       emitter.subscribe('my-event.namespace', handler);
       expect(emitter.listeners).toHaveLength(1);
@@ -186,8 +186,8 @@ describe('NativeEventEmitter', () => {
 
   describe('reset', () => {
     it('removes all listeners from the DOM element so they stop receiving events', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       const handler = vi.fn();
       emitter.subscribe('event-a', handler);
       emitter.subscribe('event-b', handler);
@@ -198,8 +198,8 @@ describe('NativeEventEmitter', () => {
     });
 
     it('does not clear the listeners array (only removes DOM listeners)', () => {
-      const el = document.createElement('div');
-      const emitter = new NativeEventEmitter(el);
+      const element = document.createElement('div');
+      const emitter = new NativeEventEmitter(element);
       emitter.subscribe('event-a', vi.fn());
       emitter.subscribe('event-b', vi.fn());
       emitter.reset();

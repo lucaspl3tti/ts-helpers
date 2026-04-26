@@ -4,17 +4,17 @@ import ObjectAccess from '../src/helper/object-access.helper';
 describe('ObjectAccess', () => {
   describe('deepClone', () => {
     it('clones a simple object', () => {
-      const obj = { a: 1, b: 'hello' };
-      const clone = ObjectAccess.deepClone(obj);
-      expect(clone).toEqual(obj);
-      expect(clone).not.toBe(obj);
+      const object = { a: 1, b: 'hello' };
+      const clone = ObjectAccess.deepClone(object);
+      expect(clone).toEqual(object);
+      expect(clone).not.toBe(object);
     });
 
     it('clones nested objects without sharing references', () => {
-      const obj = { a: { b: { c: 42 } } };
-      const clone = ObjectAccess.deepClone(obj);
+      const object = { a: { b: { c: 42 } } };
+      const clone = ObjectAccess.deepClone(object);
       clone.a.b.c = 99;
-      expect(obj.a.b.c).toBe(42);
+      expect(object.a.b.c).toBe(42);
     });
 
     it('clones Date objects correctly', () => {
@@ -25,10 +25,10 @@ describe('ObjectAccess', () => {
     });
 
     it('clones arrays', () => {
-      const arr = [1, 2, { x: 3 }];
-      const clone = ObjectAccess.deepClone(arr);
-      expect(clone).toEqual(arr);
-      expect(clone).not.toBe(arr);
+      const array = [1, 2, { x: 3 }];
+      const clone = ObjectAccess.deepClone(array);
+      expect(clone).toEqual(array);
+      expect(clone).not.toBe(array);
     });
   });
 
@@ -54,19 +54,19 @@ describe('ObjectAccess', () => {
 
   describe('addProperty', () => {
     it('adds a property and returns a new object', () => {
-      const obj = { a: 1 };
-      const result = ObjectAccess.addProperty(obj, 'b', 2);
+      const object = { a: 1 };
+      const result = ObjectAccess.addProperty(object, 'b', 2);
       expect(result).toEqual({ a: 1, b: 2 });
-      expect(obj).toEqual({ a: 1 });
+      expect(object).toEqual({ a: 1 });
     });
   });
 
   describe('removeProperty', () => {
     it('removes a property and returns a new object', () => {
-      const obj = { a: 1, b: 2 };
-      const result = ObjectAccess.removeProperty(obj, 'b');
+      const object = { a: 1, b: 2 };
+      const result = ObjectAccess.removeProperty(object, 'b');
       expect(result).toEqual({ a: 1 });
-      expect(obj).toEqual({ a: 1, b: 2 });
+      expect(object).toEqual({ a: 1, b: 2 });
     });
   });
 
@@ -104,9 +104,9 @@ describe('ObjectAccess', () => {
 
   describe('getRandomProperty', () => {
     it('returns a [key, value] tuple from the object', () => {
-      const obj = { a: 1, b: 2, c: 3 };
-      const result = ObjectAccess.getRandomProperty(obj) as [string, number];
-      expect(Object.entries(obj)).toContainEqual(result);
+      const object = { a: 1, b: 2, c: 3 };
+      const result = ObjectAccess.getRandomProperty(object) as [string, number];
+      expect(Object.entries(object)).toContainEqual(result);
     });
 
     it('returns undefined for empty object', () => {
@@ -116,25 +116,25 @@ describe('ObjectAccess', () => {
 
   describe('pick', () => {
     it('returns object with only specified keys', () => {
-      const obj = { a: 1, b: 2, c: 3 };
-      expect(ObjectAccess.pick(obj, ['a', 'c'])).toEqual({ a: 1, c: 3 });
+      const object = { a: 1, b: 2, c: 3 };
+      expect(ObjectAccess.pick(object, ['a', 'c'])).toEqual({ a: 1, c: 3 });
     });
 
     it('ignores keys not present in the object', () => {
-      const obj = { a: 1 };
-      expect(ObjectAccess.pick(obj, ['a', 'b' as keyof typeof obj])).toEqual({ a: 1 });
+      const object = { a: 1 };
+      expect(ObjectAccess.pick(object, ['a', 'b' as keyof typeof object])).toEqual({ a: 1 });
     });
   });
 
   describe('omit', () => {
     it('returns object without specified keys', () => {
-      const obj = { a: 1, b: 2, c: 3 };
-      expect(ObjectAccess.omit(obj, ['b'])).toEqual({ a: 1, c: 3 });
+      const object = { a: 1, b: 2, c: 3 };
+      expect(ObjectAccess.omit(object, ['b'])).toEqual({ a: 1, c: 3 });
     });
 
     it('returns full object when no keys match', () => {
-      const obj = { a: 1, b: 2 };
-      expect(ObjectAccess.omit(obj, [])).toEqual({ a: 1, b: 2 });
+      const object = { a: 1, b: 2 };
+      expect(ObjectAccess.omit(object, [])).toEqual({ a: 1, b: 2 });
     });
   });
 
@@ -164,13 +164,16 @@ describe('ObjectAccess', () => {
 
   describe('mapValues', () => {
     it('transforms all values with callback', () => {
-      const result = ObjectAccess.mapValues({ a: 1, b: 2 }, (v) => v * 2);
+      const result = ObjectAccess.mapValues({ a: 1, b: 2 }, (value) => value * 2);
       expect(result).toEqual({ a: 2, b: 4 });
     });
 
     it('passes key to callback', () => {
       const keys: string[] = [];
-      ObjectAccess.mapValues({ a: 1, b: 2 }, (v, k) => { keys.push(k as string); return v; });
+      ObjectAccess.mapValues(
+        { a: 1, b: 2 },
+        (value, key) => { keys.push(key as string); return value; },
+      );
       expect(keys).toEqual(['a', 'b']);
     });
   });

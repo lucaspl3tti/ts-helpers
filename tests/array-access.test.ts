@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
 import ArrayAccess from '../src/helper/array-access.helper';
 
 describe('ArrayAccess', () => {
@@ -48,11 +48,13 @@ describe('ArrayAccess', () => {
     const items = [{ age: 30 }, { age: 20 }, { age: 25 }];
 
     it('sorts ascending by default', () => {
-      expect(ArrayAccess.sortByProperty(items, 'age').map(i => i.age)).toEqual([20, 25, 30]);
+      expect(ArrayAccess.sortByProperty(items, 'age').map(item => item.age))
+        .toEqual([20, 25, 30]);
     });
 
     it('sorts descending when specified', () => {
-      expect(ArrayAccess.sortByProperty(items, 'age', 'desc').map(i => i.age)).toEqual([30, 25, 20]);
+      expect(ArrayAccess.sortByProperty(items, 'age', 'desc').map(item => item.age))
+        .toEqual([30, 25, 20]);
     });
 
     it('does not mutate original array', () => {
@@ -66,7 +68,7 @@ describe('ArrayAccess', () => {
         [{ age: 20 }, { age: 20 }],
         'age',
       );
-      expect(result.map(i => i.age)).toEqual([20, 20]);
+      expect(result.map(item => item.age)).toEqual([20, 20]);
     });
   });
 
@@ -100,7 +102,7 @@ describe('ArrayAccess', () => {
     });
 
     it('removes item by predicate', () => {
-      expect(ArrayAccess.removeItem([1, 2, 3], (x) => x > 1)).toEqual([1]);
+      expect(ArrayAccess.removeItem([1, 2, 3], (number) => number > 1)).toEqual([1]);
     });
 
     it('returns unchanged array when item not found', () => {
@@ -266,5 +268,69 @@ describe('ArrayAccess', () => {
     it('returns unique values from both', () => {
       expect(ArrayAccess.union([1, 1], [2, 2])).toEqual([1, 2]);
     });
+  });
+});
+
+describe('type-level: first', () => {
+  it('returns T|undefined without amount argument', () => {
+    expectTypeOf(ArrayAccess.first([1, 2, 3])).toEqualTypeOf<number | undefined>();
+  });
+
+  it('returns T|undefined with amount 1', () => {
+    expectTypeOf(ArrayAccess.first([1, 2, 3], 1)).toEqualTypeOf<number | undefined>();
+  });
+
+  it('returns T[] with amount > 1', () => {
+    expectTypeOf(ArrayAccess.first([1, 2, 3], 2)).toEqualTypeOf<number[]>();
+  });
+});
+
+describe('type-level: last', () => {
+  it('returns T|undefined without amount argument', () => {
+    expectTypeOf(ArrayAccess.last([1, 2, 3])).toEqualTypeOf<number | undefined>();
+  });
+
+  it('returns T|undefined with amount 1', () => {
+    expectTypeOf(ArrayAccess.last([1, 2, 3], 1)).toEqualTypeOf<number | undefined>();
+  });
+
+  it('returns T[] with amount > 1', () => {
+    expectTypeOf(ArrayAccess.last([1, 2, 3], 2)).toEqualTypeOf<number[]>();
+  });
+});
+
+describe('type-level: hasObjectWithValue', () => {
+  it('couples key and value type correctly', () => {
+    const items = [{ id: 1, name: 'Alice' }];
+    expectTypeOf(() => ArrayAccess.hasObjectWithValue(items, 'id', 1)).toBeFunction();
+    expectTypeOf(() => ArrayAccess.hasObjectWithValue(items, 'name', 'Alice')).toBeFunction();
+  });
+});
+
+describe('type-level: uniqueBy', () => {
+  it('returns same element type', () => {
+    const items = [{ id: 1, name: 'Alice' }];
+    expectTypeOf(ArrayAccess.uniqueBy(items, 'id')).toEqualTypeOf<typeof items>();
+  });
+});
+
+describe('type-level: groupBy', () => {
+  it('returns Record<string, T[]>', () => {
+    const items = [{ type: 'a' }];
+    expectTypeOf(ArrayAccess.groupBy(items, 'type')).toEqualTypeOf<Record<string, typeof items>>();
+  });
+});
+
+describe('type-level: sortByProperty', () => {
+  it('accepts keys with comparable values', () => {
+    const items = [{ age: 30, name: 'Alice' }];
+    expectTypeOf(ArrayAccess.sortByProperty(items, 'age')).toEqualTypeOf<typeof items>();
+    expectTypeOf(ArrayAccess.sortByProperty(items, 'name')).toEqualTypeOf<typeof items>();
+  });
+});
+
+describe('type-level: zip', () => {
+  it('returns typed tuple array', () => {
+    expectTypeOf(ArrayAccess.zip([1, 2], ['a', 'b'])).toEqualTypeOf<[number, string][]>();
   });
 });

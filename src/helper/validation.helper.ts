@@ -51,8 +51,8 @@ export default class Validation {
 
     // Modulo 97 via chunked big-integer arithmetic
     let remainder = 0;
-    for (let i = 0; i < numeric.length; i++) {
-      remainder = (remainder * 10 + Number(numeric[i])) % 97;
+    for (let index = 0; index < numeric.length; index++) {
+      remainder = (remainder * 10 + Number(numeric[index])) % 97;
     }
 
     return remainder === 1;

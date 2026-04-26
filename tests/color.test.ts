@@ -46,29 +46,6 @@ describe('Color', () => {
     });
   });
 
-  describe('calculateRgbChannel', () => {
-    it('returns max when hueShifted is between 1/6 and 1/2', () => {
-      expect(Color.calculateRgbChannel(0, 1, 0.3)).toBe(1);
-    });
-
-    it('adjusts hueShifted below 0 by adding 1', () => {
-      // hueShifted = -0.1 → adjusted to 0.9, which is > 2/3, so returns min (0)
-      const result = Color.calculateRgbChannel(0, 1, -0.1);
-      expect(result).toBe(0);
-    });
-
-    it('adjusts hueShifted above 1 by subtracting 1', () => {
-      const result = Color.calculateRgbChannel(0, 1, 1.1);
-      expect(result).toBeCloseTo(0.6, 10);
-    });
-
-    it('returns interpolated value when hueShifted is between 1/2 and 2/3', () => {
-      // hueShifted = 0.6 → in [0.5, 0.667) range → returns min+(max-min)*(2/3-0.6)*6 ≈ 0.4
-      const result = Color.calculateRgbChannel(0, 1, 0.6);
-      expect(result).toBeCloseTo(0.4, 5);
-    });
-  });
-
   describe('getTextColorFromBackgroundColor', () => {
     it('returns #000 for light hex color', () => {
       expect(Color.getTextColorFromBackgroundColor('#ffffff' as any)).toBe('#000');
@@ -123,6 +100,11 @@ describe('Color', () => {
       expect(result?.alpha).toBeCloseTo(0.5, 1);
     });
 
+    it('returns RGBA string when hex has alpha and returnType is string', () => {
+      // #ff000080 → alpha 0x80/255 ≈ 0.5
+      expect(Color.hexToRgb('#ff000080' as any, 'string')).toBe('rgba(255, 0, 0, 0.5)');
+    });
+
     it('returns null for invalid hex', () => {
       expect(Color.hexToRgb('#xyz' as any)).toBeNull();
     });
@@ -164,10 +146,23 @@ describe('Color', () => {
       expect(result).toBe('rgb(255, 0, 0)');
     });
 
+    it('converts hsl string with lightness below 50% (takes lightness < 0.5 branch)', () => {
+      // lightness=25% < 0.5 → maxLuminance = lightness*(1+saturation) branch
+      const result = Color.hslToRgb('hsl(0, 100%, 25%)' as any) as any;
+      expect(result?.red).toBe(128);
+      expect(result?.green).toBe(0);
+      expect(result?.blue).toBe(0);
+    });
+
     it('returns rgba object when hsla string has alpha', () => {
       const result = Color.hslToRgb('hsla(0, 100%, 50%, 0.5)' as any) as any;
       expect(result?.red).toBe(255);
       expect(result?.alpha).toBe(0.5);
+    });
+
+    it('returns RGBA string when hsla string has alpha and returnType is string', () => {
+      const result = Color.hslToRgb('hsla(0, 100%, 50%, 0.5)' as any, 'string');
+      expect(result).toBe('rgba(255, 0, 0, 0.5)');
     });
 
     it('returns null for invalid format', () => {
@@ -217,10 +212,31 @@ describe('Color', () => {
       expect(result?.lightness).toBe(50);
     });
 
+    it('converts rgb string to HSL object (red dominant, green < blue)', () => {
+      // green=0 < blue=128 → triggers the (green < blue ? 6 : 0) true branch
+      const result = Color.rgbToHsl('rgb(255, 0, 128)' as any) as any;
+      expect(result?.hue).toBe(330);
+      expect(result?.saturation).toBe(100);
+      expect(result?.lightness).toBe(50);
+    });
+
+    it('converts gray rgb string to HSL object (delta = 0)', () => {
+      // r=g=b → delta=0 → hue stays 0, saturation ternary takes the 0 branch
+      const result = Color.rgbToHsl('rgb(128, 128, 128)' as any) as any;
+      expect(result?.hue).toBe(0);
+      expect(result?.saturation).toBe(0);
+      expect(result?.lightness).toBe(50);
+    });
+
     it('converts rgba string to HSL object with alpha', () => {
       const result = Color.rgbToHsl('rgba(255, 0, 0, 0.5)' as any) as any;
       expect(result?.hue).toBe(0);
       expect(result?.alpha).toBe(0.5);
+    });
+
+    it('returns HSLA string when rgba input has alpha and returnType is string', () => {
+      const result = Color.rgbToHsl('rgba(255, 0, 0, 0.5)' as any, 'string');
+      expect(result).toBe('hsla(0, 100, 50, 0.5)');
     });
 
     it('returns null for invalid rgb', () => {

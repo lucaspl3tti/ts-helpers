@@ -1,4 +1,4 @@
-import type { CookieOptions } from '../interfaces/general.interface';
+import type { CookieOptions } from '../types/cookie.types';
 
 /**
  * Cookie provides a type-safe API for reading and writing browser cookies.

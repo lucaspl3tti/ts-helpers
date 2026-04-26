@@ -83,7 +83,7 @@ export default class Formatting {
   }
 
   static dashToCamelCase(string: string): string {
-    return string.replace(/-([a-z])/g, (ignored, char) => char.toUpperCase());
+    return string.replace(/-([a-z])/g, (ignored: string, char: string) => char.toUpperCase());
   }
 
   static capitalize(string: string): string {
@@ -99,12 +99,12 @@ export default class Formatting {
   }
 
   static formatNumber(
-    n: number,
+    number: number,
     locale?: string,
     options?: Intl.NumberFormatOptions,
   ): string {
     const languageCode = locale ?? (navigator?.language || 'de-DE');
-    return new Intl.NumberFormat(languageCode, options).format(n);
+    return new Intl.NumberFormat(languageCode, options).format(number);
   }
 
   static spaceToDashCase(string: string): string {
@@ -123,8 +123,8 @@ export default class Formatting {
     }
   }
 
-  static removeWhitespace(str: string) {
-    const lines = str
+  static removeWhitespace(string: string): string {
+    const lines = string
       .replace(/^\n/, '')
       .split('\n');
     const indent = Math.min(
