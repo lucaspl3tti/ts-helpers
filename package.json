@@ -8,9 +8,9 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/ts-helpers.js",
-      "require": "./dist/ts-helpers.umd.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/ts-helpers.umd.cjs"
     }
   },
   "files": [
@@ -18,6 +18,9 @@
   ],
   "scripts": {
     "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint:ts": "npx eslint -c eslint.config.mjs",
     "lint:ts:fix": "npm run lint:ts -- --fix"
   },
@@ -40,11 +43,14 @@
     "@types/node": "^25.2.0",
     "@typescript-eslint/eslint-plugin": "^8.54.0",
     "@typescript-eslint/parser": "^8.54.0",
+    "@vitest/coverage-v8": "^4.1.4",
     "eslint": "^9.39.2",
     "globals": "^17.2.0",
+    "happy-dom": "^20.9.0",
     "path": "^0.12.7",
     "typescript": "^5.9.3",
     "vite": "^6.4.1",
-    "vite-plugin-dts": "^4.5.4"
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.1.4"
   }
 }

@@ -68,7 +68,7 @@ export default class Formatting {
       return string;
     }
 
-    let newString = string.slice(0, maxCharacters - 1);
+    let newString = string.slice(0, maxCharacters);
 
     if (useWordBoundary) {
       newString = newString.slice(0, newString.lastIndexOf(' '));
@@ -82,17 +82,35 @@ export default class Formatting {
     return string.replace(/([A-Z])/g, '-$1').replace(/^-/, '').toLowerCase();
   }
 
-  static spaceToDashCase(string: string): string {
-    return string.replace(' ', '-').toLowerCase();
+  static dashToCamelCase(string: string): string {
+    return string.replace(/-([a-z])/g, (ignored: string, char: string) => char.toUpperCase());
   }
 
-  /**
-   * Convert a given string to a string with a unit.
-   *
-   * If the given string is empty or not a number, it will return null.
-   * If the given string is a number, it will return a string with the given
-   * unit (default is 'px').
-   */
+  static capitalize(string: string): string {
+    if (!string) {
+      return string;
+    }
+
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
+  static titleCase(string: string): string {
+    return string.replace(/\b\w/g, (char) => char.toUpperCase());
+  }
+
+  static formatNumber(
+    number: number,
+    locale?: string,
+    options?: Intl.NumberFormatOptions,
+  ): string {
+    const languageCode = locale ?? (navigator?.language || 'de-DE');
+    return new Intl.NumberFormat(languageCode, options).format(number);
+  }
+
+  static spaceToDashCase(string: string): string {
+    return string.replace(/ /g, '-').toLowerCase();
+  }
+
   static convertToUnit(string: string|number, unit = 'px'): string|null {
     if (string === null || string === '') {
       return null;
@@ -105,8 +123,8 @@ export default class Formatting {
     }
   }
 
-  static removeWhitespace(str: string) {
-    const lines = str
+  static removeWhitespace(string: string): string {
+    const lines = string
       .replace(/^\n/, '')
       .split('\n');
     const indent = Math.min(

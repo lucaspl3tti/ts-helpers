@@ -1,4 +1,4 @@
-import type { ElementCreateOptions } from '../interfaces/general.interface';
+import type { ElementCreateOptions, VirtualNode } from '../types/dom.types';
 import Utilities from './utilities.helper';
 
 /**
@@ -118,7 +118,10 @@ export default class Dom {
     );
   }
 
-  static setStyle<Element extends HTMLElement, StyleProperty extends keyof CSSStyleDeclaration>(
+  static setStyle<
+    Element extends HTMLElement,
+    StyleProperty extends string & keyof CSSStyleDeclaration,
+  >(
     element: Element,
     property: StyleProperty,
     value: CSSStyleDeclaration[StyleProperty],
@@ -127,26 +130,32 @@ export default class Dom {
       return;
     }
 
-    element.style.setProperty(property as string, value.toString());
+    element.style.setProperty(property, value.toString());
   }
 
-  static removeStyle<Element extends HTMLElement, StyleProperty extends keyof CSSStyleDeclaration>(
+  static removeStyle<
+    Element extends HTMLElement,
+    StyleProperty extends string & keyof CSSStyleDeclaration,
+  >(
     element: Element,
     property: StyleProperty,
   ): void {
-    element.style.setProperty(property as string, '');
+    element.style.setProperty(property, '');
   }
 
-  static createElement<Parent extends HTMLElement, Element extends HTMLElement>(
-    type: keyof HTMLElementTagNameMap,
+  static createElement<
+    TagName extends keyof HTMLElementTagNameMap,
+    Parent extends HTMLElement,
+  >(
+    type: TagName,
     options: ElementCreateOptions = {},
     appendTo: Parent|null = null,
-  ): Element {
+  ): HTMLElementTagNameMap[TagName] {
     if (Utilities.isEmpty(type)) {
       throw new Error('Element type for new element must not be empty');
     }
 
-    const element = document.createElement(type) as Element;
+    const element = document.createElement(type);
 
     Utilities.iterate(Object.entries(options), ([key, value]) => {
       switch (key) {
@@ -314,7 +323,7 @@ export default class Dom {
     }
   }
 
-  static extractTextFromNodes(nodes: any[]): string {
+  static extractTextFromNodes(nodes: VirtualNode[]): string {
     let text = '';
 
     for (const node of nodes) {

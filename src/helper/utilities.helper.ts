@@ -1,27 +1,16 @@
-import type { HeadingType, JsonObject, RandomTextOptions } from '../interfaces/general.interface';
+import type { HeadingType, RandomTextOptions } from '../types/base.types';
 import ObjectAccess from './object-access.helper';
 
 /**
  * Utilities provides a collection of general utility functions.
  */
 export default class Utilities {
-  // ** General utility functions **
-  /**
-   * Block scope for a given amount of time in ms and run next set piece of
-   * code only after given time has passed
-   *
-   * @NOTE: Must be called with await!
-   */
+  // ## General utility functions
   static delay(milliseconds: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
-  /**
-   * Debounce a function call to prevent it from being called too frequently.
-   * The function will only be called after the specified delay has passed
-   * since the last call.
-   */
-  static debounce<Type extends (...args: any[]) => void>(
+  static debounce<Type extends (...args: unknown[]) => void>(
     callback: Type,
     delay: number,
   ): (...args: Parameters<Type>) => void {
@@ -51,16 +40,16 @@ export default class Utilities {
       return value.length === 0;
     }
 
+    if (value instanceof FormData) {
+      return ![...value.keys()].length || [...value.keys()].length === 0;
+    }
+
     if (value instanceof Map || value instanceof Set) {
       return value.size === 0;
     }
 
     if (value instanceof Object) {
       return ObjectAccess.length(value) === 0;
-    }
-
-    if (value instanceof FormData) {
-      return ![...value.keys()].length || [...value.keys()].length === 0;
     }
 
     return false;
@@ -101,7 +90,7 @@ export default class Utilities {
   }
 
   static getFormDataFromJson(
-    jsonObject: JsonObject,
+    jsonObject: Record<string, unknown>,
     parentKey: string = '',
   ): FormData {
     const formData = new FormData();
@@ -113,13 +102,13 @@ export default class Utilities {
         if (typeof value === 'object') {
           // Recursively handle nested objects
           const nestedFormData = this.getFormDataFromJson(
-            value as JsonObject,
+            value as Record<string, unknown>,
             fullKey,
           );
 
           nestedFormData.forEach((value, key) => formData.append(key, value));
         } else {
-          formData.append(fullKey, value.toString());
+          formData.append(fullKey, String(value));
         }
       }
     });
@@ -127,15 +116,61 @@ export default class Utilities {
     return formData;
   }
 
-  // ##### Number utility functions
+  static throttle<Type extends (...args: unknown[]) => void>(
+    callback: Type,
+    milliseconds: number,
+  ): Type {
+    let lastCall = 0;
+
+    return function(...args: Parameters<Type>): void {
+      const now = Date.now();
+
+      if (now - lastCall >= milliseconds) {
+        lastCall = now;
+        callback(...args);
+      }
+    } as Type;
+  }
+
+  static memoize<Type extends (...args: unknown[]) => unknown>(callback: Type): Type {
+    const cache = new Map<string, ReturnType<Type>>();
+
+    return function(...args: Parameters<Type>): ReturnType<Type> {
+      const key = JSON.stringify(args);
+
+      if (cache.has(key)) {
+        return cache.get(key) as ReturnType<Type>;
+      }
+
+      const result = callback(...args) as ReturnType<Type>;
+      cache.set(key, result);
+      return result;
+    } as Type;
+  }
+
+  static pipe<Type>(...callbacks: Array<(arg: Type) => Type>): (arg: Type) => Type {
+    return (arg: Type): Type => callbacks.reduce((acc, callback) => callback(acc), arg);
+  }
+
+  static compose<Type>(...callbacks: Array<(arg: Type) => Type>): (arg: Type) => Type {
+    return (arg: Type): Type => callbacks.reduceRight((acc, callback) => callback(acc), arg);
+  }
+
+  // ## Number utility functions
   static getRandomNumber(minimumValue: number, maximumValue: number): number {
     return Math.floor(Math.random() * (maximumValue - minimumValue + 1) + minimumValue);
   }
 
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isEven instead
+   */
   static numberIsEven(number: number): boolean {
     return number % 2 === 0;
   }
 
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isOdd instead
+   */
   static numberIsOdd(number: number): boolean {
     return number % 2 !== 0;
   }
@@ -157,13 +192,7 @@ export default class Utilities {
     return (value: number): number => this.clamp(value, min, max);
   }
 
-  // ##### Validation utility functions
-  static isValidEmail(email: string) {
-    const emailRegex = /^[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-    return emailRegex.test(email);
-  }
-
-  // ##### Text utility functions
+  // ## Text utility functions
   static getNextSmallerHeadingType(headingType: string): HeadingType {
     const level = parseInt(headingType.replace('h', ''), 10);
 
@@ -214,7 +243,7 @@ export default class Utilities {
 
     const remainingLength = length - result.length;
 
-    for (let i = 0; i < remainingLength; i++) {
+    for (let index = 0; index < remainingLength; index++) {
       result.push(allCharacters.charAt(this.getRandomNumber(0, allCharacters.length - 1)));
     }
 
@@ -224,5 +253,14 @@ export default class Utilities {
     }
 
     return result.join('');
+  }
+
+  // ## Validation utility functions
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isValidEmail instead
+   */
+  static isValidEmail(email: string): boolean {
+    const emailRegex = /^[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+    return emailRegex.test(email);
   }
 }

@@ -1,4 +1,17 @@
 import Utilities from './utilities.helper';
+import type {
+  ColorDefinition,
+  ColorFormat,
+  ColorReturnType,
+  CssVariableName,
+  HexCode,
+  HslObject,
+  HslString,
+  HslaString,
+  RgbObject,
+  RgbString,
+  RgbaString,
+} from '../types/color.types';
 
 /**
  * Color provides utility methods for working with colors in different formats.
@@ -7,7 +20,7 @@ import Utilities from './utilities.helper';
  */
 export default class Color {
   // **general color functions**
-  static getRandomColor() {
+  static getRandomColor(): HexCode {
     const letters = '0123456789ABCDEF';
     return `#${Array.from({ length: 6 }, () => letters[Math.floor(Math.random() * 16)]).join('')}`;
   }
@@ -37,7 +50,7 @@ export default class Color {
   }
 
   // Calculates a RGB color channel based on the HSL(A) values.
-  static calculateRgbChannel(
+  private static calculateRgbChannel(
     min: number,
     max: number,
     hueShifted: number,
@@ -78,19 +91,15 @@ export default class Color {
 
     switch (colorFormat) {
       case 'hex':
-        rgb = this.hexToRgb(backgroundColor as HexCode) as RgbObject|null;
+        rgb = this.hexToRgb(backgroundColor as HexCode);
         break;
       case 'rgb':
       case 'rgba':
-        rgb = this.parseRgbStringToObject(
-          backgroundColor as RgbString|RgbaString,
-        ) as RgbObject|null;
+        rgb = this.parseRgbStringToObject(backgroundColor as RgbString|RgbaString);
         break;
       case 'hsl':
       case 'hsla':
-        rgb = this.hslToRgb(
-          backgroundColor as HslString|HslaString,
-        ) as RgbObject|null;
+        rgb = this.hslToRgb(backgroundColor as HslString|HslaString);
         break;
       default:
         console.warn(`Unsupported color format: ${backgroundColor}`);
@@ -109,10 +118,12 @@ export default class Color {
 
   // **Format to RGB/A functions**
   // Convert a hex code into a RGB/A object or string
+  static hexToRgb(hexCode: HexCode, returnType?: 'object'): RgbObject | null;
+  static hexToRgb(hexCode: HexCode, returnType: 'string'): RgbString | RgbaString | null;
   static hexToRgb(
     hexCode: HexCode,
     returnType: ColorReturnType = 'object',
-  ): RgbObject|RgbString|RgbaString|null {
+  ): RgbObject | RgbString | RgbaString | null {
     let sanitizedHex = hexCode.replace(/^#/, '');
 
     if (sanitizedHex.length === 3) {
@@ -167,10 +178,12 @@ export default class Color {
   }
 
   // Converts an HSL(A) string to an RGB(A) object
+  static hslToRgb(hslString: HslString | HslaString, returnType?: 'object'): RgbObject | null;
+  static hslToRgb(hslString: HslString|HslaString, returnType: 'string'): RgbString|RgbaString|null;
   static hslToRgb(
     hslString: HslString|HslaString,
     returnType: ColorReturnType = 'object',
-  ): RgbObject|RgbString|RgbaString|null {
+  ): RgbObject | RgbString | RgbaString | null {
     // eslint-disable-next-line max-len
     const hslRegex = /^hsla?\(\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)%\s*,\s*(-?\d+(\.\d+)?)%(?:\s*,\s*(0|0?\.\d+|1))?\s*\)$/;
     const match = hslString.match(hslRegex);
@@ -236,7 +249,7 @@ export default class Color {
 
   // Converts an HSL String to a hex code string
   static hslToHex(hsl: HslString|HslaString): HexCode|null {
-    const rgb = this.hslToRgb(hsl) as RgbObject;
+    const rgb = this.hslToRgb(hsl);
 
     if (!rgb) {
       return null;
@@ -247,10 +260,12 @@ export default class Color {
 
   // **Format to hsl object functions**
   // Converts an RGB object to an HSL object or string
+  static rgbToHsl(rgbString: RgbString|RgbaString, returnType?: 'object'): HslObject | null;
+  static rgbToHsl(rgbString: RgbString|RgbaString, returnType: 'string'): HslString|HslaString|null;
   static rgbToHsl(
     rgbString: RgbString|RgbaString,
     returnType: ColorReturnType = 'object',
-  ): HslObject|HslString|HslaString|null {
+  ): HslObject | HslString | HslaString | null {
     const rgb = this.parseRgbStringToObject(rgbString);
 
     if (!rgb) {
@@ -293,51 +308,26 @@ export default class Color {
         : `hsla(${hue}, ${saturation}, ${lightness}, ${alpha})`;
     }
 
-    return { hue, saturation, lightness };
+    return returnType === 'object'
+      ? { hue, saturation, lightness }
+      : `hsl(${hue}, ${saturation}, ${lightness})`;
   }
 
   // Converts an Hex Code to an HSL object or string
+  static hexToHsl(hexCode: HexCode, returnType?: 'object'): HslObject | null;
+  static hexToHsl(hexCode: HexCode, returnType: 'string'): HslString | HslaString | null;
   static hexToHsl(
     hexCode: HexCode,
     returnType: ColorReturnType = 'object',
-  ): HslObject|HslString|HslaString|null {
-    const rgbString = this.hexToRgb(
-      hexCode,
-      'string',
-    ) as RgbString|RgbaString|null;
+  ): HslObject | HslString | HslaString | null {
+    const rgbString = this.hexToRgb(hexCode, 'string');
 
     if (!rgbString) {
       return null;
     }
 
-    return this.rgbToHsl(rgbString, returnType);
+    return returnType === 'string'
+      ? this.rgbToHsl(rgbString, 'string')
+      : this.rgbToHsl(rgbString);
   }
 }
-
-// **Interfaces for the color helper class**
-export interface RgbObject {
-  red: number
-  green: number
-  blue: number
-  alpha?: number
-}
-
-export interface HslObject {
-  hue: number
-  saturation: number
-  lightness: number
-  alpha?: number
-}
-
-export type ColorFormat = 'hex' | 'rgb' | 'rgba' | 'hsl' | 'hsla' | 'unknown';
-
-export type HexCode = `#${string}`;
-export type RgbString = `rgb(${number}, ${number}, ${number})`;
-export type RgbaString = `rgba(${number}, ${number}, ${number}, ${number})`;
-export type HslString = `hsl(${number}, ${number}, ${number})`;
-export type HslaString = `hsla(${number}, ${number}, ${number}, ${number})`;
-
-export type ColorReturnType = 'string' | 'object';
-export type ColorDefinition = HexCode | RgbString | RgbaString | HslString | HslaString; // eslint-disable-line max-len
-export type CssVariableName = `--${string}`;
-export type CssVariable = `var(${CssVariableName})`;

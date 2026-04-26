@@ -1,7 +1,7 @@
-var b = Object.defineProperty;
-var w = (h, t, e) => t in h ? b(h, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : h[t] = e;
-var g = (h, t, e) => w(h, typeof t != "symbol" ? t + "" : t, e);
-class y {
+var w = Object.defineProperty;
+var y = (l, t, e) => t in l ? w(l, t, { enumerable: !0, configurable: !0, writable: !0, value: e }) : l[t] = e;
+var g = (l, t, e) => y(l, typeof t != "symbol" ? t + "" : t, e);
+class b {
   static length(t) {
     return Object.keys(t).length;
   }
@@ -22,34 +22,53 @@ class y {
       [e]: r
     };
   }
+  /**
+   * @deprecated: Will be removed in a future release. Use `ObjectAccess.omit`
+   */
   static removeProperty(t, e) {
     const { [e]: r, ...n } = t;
     return n;
   }
   static getRandomProperty(t) {
-    const e = Object.entries(t), r = l.getRandomNumber(0, e.length - 1);
+    const e = Object.entries(t), r = u.getRandomNumber(0, e.length - 1);
     return e[r];
   }
   static deepClone(t) {
-    return JSON.parse(JSON.stringify(t));
+    return structuredClone(t);
+  }
+  static pick(t, e) {
+    const r = {};
+    return e.forEach((n) => {
+      Object.prototype.hasOwnProperty.call(t, n) && (r[n] = t[n]);
+    }), r;
+  }
+  static omit(t, e) {
+    const r = { ...t };
+    return e.forEach((n) => delete r[n]), r;
+  }
+  static deepMerge(t, e) {
+    const r = structuredClone(t);
+    for (const n of Object.keys(e)) {
+      const s = e[n], i = r[n];
+      s !== null && typeof s == "object" && !Array.isArray(s) && i !== null && typeof i == "object" && !Array.isArray(i) ? r[n] = b.deepMerge(
+        i,
+        s
+      ) : r[n] = s;
+    }
+    return r;
+  }
+  static mapValues(t, e) {
+    const r = {};
+    for (const n of Object.keys(t))
+      r[n] = e(t[n], n);
+    return r;
   }
 }
-class l {
-  // ** General utility functions **
-  /**
-   * Block scope for a given amount of time in ms and run next set piece of
-   * code only after given time has passed
-   *
-   * @NOTE: Must be called with await!
-   */
+class u {
+  // ## General utility functions
   static delay(t) {
     return new Promise((e) => setTimeout(e, t));
   }
-  /**
-   * Debounce a function call to prevent it from being called too frequently.
-   * The function will only be called after the specified delay has passed
-   * since the last call.
-   */
   static debounce(t, e) {
     let r = null;
     return function(...n) {
@@ -59,7 +78,7 @@ class l {
     };
   }
   static isEmpty(t) {
-    return t ? typeof t == "string" ? t.trim() === "" : Array.isArray(t) ? t.length === 0 : t instanceof Map || t instanceof Set ? t.size === 0 : t instanceof Object ? y.length(t) === 0 : t instanceof FormData ? ![...t.keys()].length || [...t.keys()].length === 0 : !1 : !0;
+    return t ? typeof t == "string" ? t.trim() === "" : Array.isArray(t) ? t.length === 0 : t instanceof FormData ? ![...t.keys()].length || [...t.keys()].length === 0 : t instanceof Map || t instanceof Set ? t.size === 0 : t instanceof Object ? b.length(t) === 0 : !1 : !0;
   }
   static iterate(t, e) {
     if (t instanceof Map || Array.isArray(t))
@@ -87,16 +106,45 @@ class l {
       s && (typeof s == "object" ? this.getFormDataFromJson(
         s,
         i
-      ).forEach((c, o) => r.append(o, c)) : r.append(i, s.toString()));
+      ).forEach((c, o) => r.append(o, c)) : r.append(i, String(s)));
     }), r;
   }
-  // ##### Number utility functions
+  static throttle(t, e) {
+    let r = 0;
+    return function(...n) {
+      const s = Date.now();
+      s - r >= e && (r = s, t(...n));
+    };
+  }
+  static memoize(t) {
+    const e = /* @__PURE__ */ new Map();
+    return function(...r) {
+      const n = JSON.stringify(r);
+      if (e.has(n))
+        return e.get(n);
+      const s = t(...r);
+      return e.set(n, s), s;
+    };
+  }
+  static pipe(...t) {
+    return (e) => t.reduce((r, n) => n(r), e);
+  }
+  static compose(...t) {
+    return (e) => t.reduceRight((r, n) => n(r), e);
+  }
+  // ## Number utility functions
   static getRandomNumber(t, e) {
     return Math.floor(Math.random() * (e - t + 1) + t);
   }
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isEven instead
+   */
   static numberIsEven(t) {
     return t % 2 === 0;
   }
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isOdd instead
+   */
   static numberIsOdd(t) {
     return t % 2 !== 0;
   }
@@ -109,11 +157,7 @@ class l {
   static createClamper(t, e) {
     return (r) => this.clamp(r, t, e);
   }
-  // ##### Validation utility functions
-  static isValidEmail(t) {
-    return /^[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(t);
-  }
-  // ##### Text utility functions
+  // ## Text utility functions
   static getNextSmallerHeadingType(t) {
     const e = parseInt(t.replace("h", ""), 10);
     return isNaN(e) || e < 1 || e > 6 ? (console.warn(`Invalid Heading-Type "${t}". Falling back to h1.`), "h1") : `h${e >= 6 ? 6 : e + 1}`;
@@ -138,27 +182,31 @@ class l {
     for (let o = 0; o < c; o++)
       a.push(i.charAt(this.getRandomNumber(0, i.length - 1)));
     for (let o = a.length - 1; o > 0; o--) {
-      const d = Math.floor(Math.random() * (o + 1));
-      [a[o], a[d]] = [a[d], a[o]];
+      const h = Math.floor(Math.random() * (o + 1));
+      [a[o], a[h]] = [a[h], a[o]];
     }
     return a.join("");
   }
+  // ## Validation utility functions
+  /**
+   * @deprecated: Will be removed in a future release. Use Validation.isValidEmail instead
+   */
+  static isValidEmail(t) {
+    return /^[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(t);
+  }
 }
-class k {
+class E {
   static first(t, e = 1) {
     return e === 1 ? t[0] : t.slice(0, e);
   }
   static last(t, e = 1) {
     return e === 1 ? t[t.length - 1] : t.slice(-e);
   }
-  static flatten(t) {
-    return t.reduce((e, r) => [
-      ...e,
-      ...Array.isArray(r) ? this.flatten(r) : [r]
-    ], []);
+  static flatten(t, e = 1 / 0) {
+    return t.flat(e);
   }
-  static sortByProperty(t, e) {
-    return t.sort((r, n) => r[e] > n[e] ? 1 : -1);
+  static sortByProperty(t, e, r = "asc") {
+    return [...t].sort((n, s) => n[e] > s[e] ? r === "asc" ? 1 : -1 : n[e] < s[e] ? r === "asc" ? -1 : 1 : 0);
   }
   static getObjectByValue(t, e, r) {
     return t.find((n) => n[e] === r);
@@ -167,10 +215,10 @@ class k {
     return t.some((n) => n[e] === r);
   }
   static removeItem(t, e) {
-    return t.filter((r) => r !== e);
+    return typeof e == "function" ? t.filter((r) => !e(r)) : t.filter((r) => r !== e);
   }
   static getRandomItem(t) {
-    return t[l.getRandomNumber(0, t.length - 1)];
+    return t[u.getRandomNumber(0, t.length - 1)];
   }
   static wrapInArray(t) {
     return t == null ? [] : Array.isArray(t) ? t : [t];
@@ -182,13 +230,55 @@ class k {
     return t.length ? t.join(", ") : "";
   }
   static getArrayFromNewlines(t) {
-    return l.isEmpty(t) ? [] : t.split(/\n|\s\n/);
+    return u.isEmpty(t) ? [] : t.split(/\n|\s\n/);
   }
   static getArrayFromCommas(t) {
-    return l.isEmpty(t) ? [] : t.split(",").map((e) => e.trim());
+    return u.isEmpty(t) ? [] : t.split(",").map((e) => e.trim());
+  }
+  static chunk(t, e) {
+    if (e <= 0)
+      return [];
+    const r = [];
+    for (let n = 0; n < t.length; n += e)
+      r.push(t.slice(n, n + e));
+    return r;
+  }
+  static unique(t) {
+    return [...new Set(t)];
+  }
+  static uniqueBy(t, e) {
+    const r = /* @__PURE__ */ new Set();
+    return t.filter((n) => {
+      const s = n[e];
+      return r.has(s) ? !1 : (r.add(s), !0);
+    });
+  }
+  static groupBy(t, e) {
+    return t.reduce((r, n) => {
+      const s = String(n[e]);
+      return r[s] || (r[s] = []), r[s].push(n), r;
+    }, {});
+  }
+  static zip(t, e) {
+    const r = Math.min(t.length, e.length);
+    return Array.from({ length: r }, (n, s) => [
+      t[s],
+      e[s]
+    ]);
+  }
+  static intersection(t, e) {
+    const r = new Set(e);
+    return t.filter((n) => r.has(n));
+  }
+  static difference(t, e) {
+    const r = new Set(e);
+    return t.filter((n) => !r.has(n));
+  }
+  static union(t, e) {
+    return this.unique([...t, ...e]);
   }
 }
-class v {
+class A {
   // **general color functions**
   static getRandomColor() {
     const t = "0123456789ABCDEF";
@@ -218,23 +308,17 @@ class v {
         break;
       case "rgb":
       case "rgba":
-        r = this.parseRgbStringToObject(
-          t
-        );
+        r = this.parseRgbStringToObject(t);
         break;
       case "hsl":
       case "hsla":
-        r = this.hslToRgb(
-          t
-        );
+        r = this.hslToRgb(t);
         break;
       default:
         return console.warn(`Unsupported color format: ${t}`), "#000";
     }
     return r ? (r.red * 299 + r.green * 587 + r.blue * 114) / 1e3 > 128 ? "#000" : "#fff" : (console.warn(`Could not convert color to RGB: ${t}`), "#000");
   }
-  // **Format to RGB/A functions**
-  // Convert a hex code into a RGB/A object or string
   static hexToRgb(t, e = "object") {
     let r = t.replace(/^#/, "");
     r.length === 3 && (r = r.split("").map((o) => o + o).join(""));
@@ -252,7 +336,6 @@ class v {
     const n = parseInt(r[1], 10), s = parseInt(r[3], 10), i = parseInt(r[5], 10), a = r[7] ? parseFloat(r[7]) : void 0;
     return { red: n, green: s, blue: i, alpha: a };
   }
-  // Converts an HSL(A) string to an RGB(A) object
   static hslToRgb(t, e = "object") {
     const r = /^hsla?\(\s*(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)%\s*,\s*(-?\d+(\.\d+)?)%(?:\s*,\s*(0|0?\.\d+|1))?\s*\)$/, n = t.match(r);
     if (!n || !n[1] || !n[3] || !n[5])
@@ -262,25 +345,25 @@ class v {
       const f = Math.round(a * 255);
       return { red: f, green: f, blue: f, alpha: c };
     }
-    const o = a < 0.5 ? a * (1 + i) : a + i - a * i, d = 2 * a - o, u = Math.round(this.calculateRgbChannel(
-      d,
+    const o = a < 0.5 ? a * (1 + i) : a + i - a * i, h = 2 * a - o, d = Math.round(this.calculateRgbChannel(
+      h,
       o,
       s + 1 / 3
     ) * 255), m = Math.round(this.calculateRgbChannel(
-      d,
+      h,
       o,
       s
     ) * 255), p = Math.round(this.calculateRgbChannel(
-      d,
+      h,
       o,
       s - 1 / 3
     ) * 255);
-    return c ? e === "object" ? { red: u, green: m, blue: p, alpha: c } : `rgba(${u}, ${m}, ${p}, ${Number(c.toFixed(2))})` : e === "object" ? { red: u, green: m, blue: p } : `rgb(${u}, ${m}, ${p})`;
+    return c ? e === "object" ? { red: d, green: m, blue: p, alpha: c } : `rgba(${d}, ${m}, ${p}, ${Number(c.toFixed(2))})` : e === "object" ? { red: d, green: m, blue: p } : `rgb(${d}, ${m}, ${p})`;
   }
   // **Format to hex code functions**
   // Converts an RGB object to a hex code string
   static rgbToHex(t) {
-    const e = l.createClamper(0, 255), r = e(t.red).toString(16).padStart(2, "0"), n = e(t.green).toString(16).padStart(2, "0"), s = e(t.blue).toString(16).padStart(2, "0");
+    const e = u.createClamper(0, 255), r = e(t.red).toString(16).padStart(2, "0"), n = e(t.green).toString(16).padStart(2, "0"), s = e(t.blue).toString(16).padStart(2, "0");
     return `#${r}${n}${s}`;
   }
   // Converts an HSL String to a hex code string
@@ -288,32 +371,63 @@ class v {
     const e = this.hslToRgb(t);
     return e ? this.rgbToHex(e) : null;
   }
-  // **Format to hsl object functions**
-  // Converts an RGB object to an HSL object or string
   static rgbToHsl(t, e = "object") {
     const r = this.parseRgbStringToObject(t);
     if (!r)
       return null;
-    const n = l.createClamper(0, 255), s = n(r.red) / 255, i = n(r.green) / 255, a = n(r.blue) / 255, c = Math.max(s, i, a), o = Math.min(s, i, a), d = c - o;
-    let u = 0;
-    d !== 0 && (c === s ? u = ((i - a) / d + (i < a ? 6 : 0)) * 60 : c === i ? u = ((a - s) / d + 2) * 60 : c === a && (u = ((s - i) / d + 4) * 60));
-    let m = (c + o) / 2, p = d === 0 ? 0 : d / (1 - Math.abs(2 * m - 1));
-    if (u = Math.round(u), p = Math.round(p * 100), m = Math.round(m * 100), r.alpha) {
+    const n = u.createClamper(0, 255), s = n(r.red) / 255, i = n(r.green) / 255, a = n(r.blue) / 255, c = Math.max(s, i, a), o = Math.min(s, i, a), h = c - o;
+    let d = 0;
+    h !== 0 && (c === s ? d = ((i - a) / h + (i < a ? 6 : 0)) * 60 : c === i ? d = ((a - s) / h + 2) * 60 : c === a && (d = ((s - i) / h + 4) * 60));
+    let m = (c + o) / 2, p = h === 0 ? 0 : h / (1 - Math.abs(2 * m - 1));
+    if (d = Math.round(d), p = Math.round(p * 100), m = Math.round(m * 100), r.alpha) {
       const f = Math.max(0, Math.min(1, r.alpha));
-      return e === "object" ? { hue: u, saturation: p, lightness: m, alpha: f } : `hsla(${u}, ${p}, ${m}, ${f})`;
+      return e === "object" ? { hue: d, saturation: p, lightness: m, alpha: f } : `hsla(${d}, ${p}, ${m}, ${f})`;
     }
-    return { hue: u, saturation: p, lightness: m };
+    return e === "object" ? { hue: d, saturation: p, lightness: m } : `hsl(${d}, ${p}, ${m})`;
   }
-  // Converts an Hex Code to an HSL object or string
   static hexToHsl(t, e = "object") {
-    const r = this.hexToRgb(
-      t,
-      "string"
-    );
-    return r ? this.rgbToHsl(r, e) : null;
+    const r = this.hexToRgb(t, "string");
+    return r ? e === "string" ? this.rgbToHsl(r, "string") : this.rgbToHsl(r) : null;
   }
 }
-class A {
+class C {
+  static set(t, e, r = {}) {
+    const { expires: n, path: s = "/", domain: i, secure: a, sameSite: c } = r;
+    let o = `${encodeURIComponent(t)}=${encodeURIComponent(e)}`;
+    if (n != null) {
+      const h = typeof n == "number" ? new Date(Date.now() + n * 864e5) : n;
+      o += `; expires=${h.toUTCString()}`;
+    }
+    o += `; path=${s}`, i && (o += `; domain=${i}`), a && (o += "; secure"), c && (o += `; samesite=${c}`), document.cookie = o;
+  }
+  static get(t) {
+    const e = `${encodeURIComponent(t)}=`, r = document.cookie.split("; ");
+    for (const n of r)
+      if (n.startsWith(e))
+        return decodeURIComponent(n.slice(e.length));
+    return null;
+  }
+  static delete(t, e = "/") {
+    document.cookie = `${encodeURIComponent(t)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${e}`;
+  }
+  static getAll() {
+    const t = {};
+    if (!document.cookie)
+      return t;
+    for (const e of document.cookie.split("; ")) {
+      const r = e.indexOf("=");
+      if (r === -1)
+        continue;
+      const n = decodeURIComponent(e.slice(0, r)), s = decodeURIComponent(e.slice(r + 1));
+      t[n] = s;
+    }
+    return t;
+  }
+  static has(t) {
+    return this.get(t) !== null;
+  }
+}
+class v {
   static isTouch() {
     return (navigator.maxTouchPoints || 0) > 0 || this.hasAnyCoarsePointer();
   }
@@ -358,7 +472,7 @@ class x {
   // Get multiple elements from the DOM by their selectors
   static getSingleElements(t, e, r = !0) {
     const n = {};
-    return l.iterate(e, (s, i) => {
+    return u.iterate(e, (s, i) => {
       n[i] = this.get(t, s, r);
     }), n;
   }
@@ -380,7 +494,7 @@ class x {
     return t.classList.contains(e);
   }
   static toggleClass(t, e) {
-    Array.isArray(e) ? l.iterate(e, (r) => t.classList.toggle(r)) : t.classList.toggle(e);
+    Array.isArray(e) ? u.iterate(e, (r) => t.classList.toggle(r)) : t.classList.toggle(e);
   }
   // eslint-disable-next-line max-len
   static listenTo(t, e, r) {
@@ -396,33 +510,33 @@ class x {
     t.style.setProperty(e, "");
   }
   static createElement(t, e = {}, r = null) {
-    if (l.isEmpty(t))
+    if (u.isEmpty(t))
       throw new Error("Element type for new element must not be empty");
     const n = document.createElement(t);
-    return l.iterate(Object.entries(e), ([s, i]) => {
+    return u.iterate(Object.entries(e), ([s, i]) => {
       switch (s) {
         case "id":
-          if (l.isEmpty(i))
+          if (u.isEmpty(i))
             break;
           n.id = i;
           break;
         case "classes":
-          if (l.isEmpty(i))
+          if (u.isEmpty(i))
             break;
           this.addClass(n, i);
           break;
         case "text":
-          if (l.isEmpty(i))
+          if (u.isEmpty(i))
             break;
           n.textContent = i;
           break;
         case "html":
-          if (l.isEmpty(i))
+          if (u.isEmpty(i))
             break;
           n.innerHTML = i;
           break;
         case "dataset":
-          if (l.isEmpty(i))
+          if (u.isEmpty(i))
             break;
           Object.entries(i).forEach(([a, c]) => {
             typeof c == "string" && (n.dataset[a] = c);
@@ -442,7 +556,7 @@ class x {
     t.classList.add(e);
   }
   static showElement(t, e = "", r = "block") {
-    if (l.isEmpty(e))
+    if (u.isEmpty(e))
       return this.setStyle(t, "display", r);
     t.classList.add(e);
   }
@@ -564,7 +678,7 @@ class M {
     });
   }
 }
-class T {
+class R {
   static formatDate(t, e = {}) {
     if (!t || t === "")
       throw new Error("Date value must not be null or empty");
@@ -596,22 +710,28 @@ class T {
   static truncateString(t, e, r = !0) {
     if (t.length <= e)
       return t;
-    let n = t.slice(0, e - 1);
+    let n = t.slice(0, e);
     return r && (n = n.slice(0, n.lastIndexOf(" "))), n += "…", n;
   }
   static camelToDashCase(t) {
     return t.replace(/([A-Z])/g, "-$1").replace(/^-/, "").toLowerCase();
   }
-  static spaceToDashCase(t) {
-    return t.replace(" ", "-").toLowerCase();
+  static dashToCamelCase(t) {
+    return t.replace(/-([a-z])/g, (e, r) => r.toUpperCase());
   }
-  /**
-   * Convert a given string to a string with a unit.
-   *
-   * If the given string is empty or not a number, it will return null.
-   * If the given string is a number, it will return a string with the given
-   * unit (default is 'px').
-   */
+  static capitalize(t) {
+    return t && t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  static titleCase(t) {
+    return t.replace(/\b\w/g, (e) => e.toUpperCase());
+  }
+  static formatNumber(t, e, r) {
+    const n = e ?? ((navigator == null ? void 0 : navigator.language) || "de-DE");
+    return new Intl.NumberFormat(n, r).format(t);
+  }
+  static spaceToDashCase(t) {
+    return t.replace(/ /g, "-").toLowerCase();
+  }
   static convertToUnit(t, e = "px") {
     return t === null || t === "" ? null : isNaN(+t) ? String(t) : isFinite(+t) ? `${Number(t)}${e}` : null;
   }
@@ -624,7 +744,111 @@ class T {
 `);
   }
 }
-class E {
+class S {
+  static getStore(t = "local") {
+    return t === "session" ? sessionStorage : localStorage;
+  }
+  static set(t, e, r = {}) {
+    const { ttl: n, storage: s = "local" } = r, i = {
+      value: e,
+      expiresAt: n != null ? Date.now() + n * 1e3 : null
+    };
+    this.getStore(s).setItem(t, JSON.stringify(i));
+  }
+  static get(t, e = "local") {
+    const r = this.getStore(e).getItem(t);
+    if (r === null)
+      return null;
+    try {
+      const n = JSON.parse(r);
+      return n.expiresAt !== null && Date.now() > n.expiresAt ? (this.getStore(e).removeItem(t), null) : n.value;
+    } catch {
+      return null;
+    }
+  }
+  static remove(t, e = "local") {
+    this.getStore(e).removeItem(t);
+  }
+  static clear(t = "local") {
+    this.getStore(t).clear();
+  }
+  static has(t, e = "local") {
+    return this.get(t, e) !== null;
+  }
+}
+class N {
+  static slugify(t) {
+    return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, "").trim().replace(/[\s-]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+  static truncateMiddle(t, e) {
+    if (t.length <= e)
+      return t;
+    const r = Math.floor((e - 1) / 2), n = t.slice(0, r), s = t.slice(t.length - (e - 1 - r));
+    return `${n}…${s}`;
+  }
+  static countOccurrences(t, e) {
+    if (!e)
+      return 0;
+    let r = 0, n = t.indexOf(e);
+    for (; n !== -1; )
+      r++, n = t.indexOf(e, n + e.length);
+    return r;
+  }
+  static stripHtml(t) {
+    return t.replace(/<[^>]*>/g, "");
+  }
+  static template(t, e) {
+    return t.replace(/\{(\w+)\}/g, (r, n) => e[n] ?? `{${n}}`);
+  }
+  static capitalize(t) {
+    return t && t.charAt(0).toUpperCase() + t.slice(1);
+  }
+  static titleCase(t) {
+    return t.replace(/\b\w/g, (e) => e.toUpperCase());
+  }
+}
+class I {
+  static isValidEmail(t) {
+    return /^[a-zA-Z0-9._-]+(\+[a-zA-Z0-9._-]+)?@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(t);
+  }
+  static isUrl(t) {
+    try {
+      const e = new URL(t);
+      return e.protocol === "http:" || e.protocol === "https:";
+    } catch {
+      return !1;
+    }
+  }
+  static isPhoneNumber(t) {
+    return /^\+?[\d\s\-().]{7,20}$/.test(t.trim());
+  }
+  static isNumeric(t) {
+    return t.trim() !== "" && isFinite(Number(t));
+  }
+  static isBetween(t, e, r) {
+    return t >= e && t <= r;
+  }
+  static isEven(t) {
+    return t % 2 === 0;
+  }
+  static isOdd(t) {
+    return t % 2 !== 0;
+  }
+  static isIban(t) {
+    const e = t.replace(/\s+/g, "").toUpperCase();
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(e))
+      return !1;
+    const n = (e.slice(4) + e.slice(0, 4)).replace(
+      /[A-Z]/g,
+      (i) => String(i.charCodeAt(0) - 55)
+    );
+    let s = 0;
+    for (let i = 0; i < n.length; i++)
+      s = (s * 10 + Number(n[i])) % 97;
+    return s === 1;
+  }
+}
+class $ {
   static getMediaQuery(t, e = "min") {
     const r = this.breakpoints[t];
     return window.matchMedia(`(${e}-width: ${r}px)`);
@@ -677,9 +901,15 @@ class E {
   static isUHD() {
     return window.innerWidth >= this.breakpoints.uhd;
   }
+  static isAbove(t) {
+    return window.innerWidth >= this.breakpoints[t];
+  }
+  static isBelow(t) {
+    return window.innerWidth < this.breakpoints[t];
+  }
 }
 // Predefined viewport widths -> based on Bootstrap 5 breakpoints + custom ones
-g(E, "breakpoints", {
+g($, "breakpoints", {
   sm: 576,
   md: 768,
   lg: 992,
@@ -691,13 +921,17 @@ g(E, "breakpoints", {
   uhd: 3840
 });
 export {
-  k as ArrayAccess,
-  v as Color,
-  A as DeviceAccess,
+  E as ArrayAccess,
+  A as Color,
+  C as Cookie,
+  v as DeviceAccess,
   x as Dom,
-  T as Formatting,
+  R as Formatting,
   M as NativeEventEmitter,
-  y as ObjectAccess,
-  l as Utilities,
-  E as ViewportAccess
+  b as ObjectAccess,
+  S as Storage,
+  N as StringHelper,
+  u as Utilities,
+  I as Validation,
+  $ as ViewportAccess
 };

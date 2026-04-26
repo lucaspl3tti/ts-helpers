@@ -1,4 +1,3 @@
-import type { JsonObject } from '../interfaces/general.interface';
 import Utilities from './utilities.helper';
 
 /**
@@ -6,23 +5,26 @@ import Utilities from './utilities.helper';
  */
 export default class ObjectAccess {
   static length(
-    object: JsonObject,
+    object: object,
   ): number {
     return Object.keys(object).length;
   }
 
-  static has(
-    object: JsonObject,
-    key: (keyof JsonObject)[],
+  static has<Type extends object>(
+    object: Type,
+    key: (keyof Type)[],
   ): boolean {
-    return key.every((k) => Object.prototype.hasOwnProperty.call(object, k));
+    return key.every((item) => Object.prototype.hasOwnProperty.call(object, item));
   }
 
-  static first<Key extends string|number|symbol>(
-    object: JsonObject,
+  static first<Type extends Record<string, unknown>>(object: Type, amount: 1): [string, unknown] | undefined; // eslint-disable-line max-len
+  static first<Type extends Record<string, unknown>>(object: Type, amount: number): [string, unknown][]; // eslint-disable-line max-len
+  static first<Type extends Record<string, unknown>>(object: Type): [string, unknown] | undefined;
+  static first<Type extends Record<string, unknown>>(
+    object: Type,
     amount = 1,
-  ): JsonObject|JsonObject[]|undefined {
-    const entries = Object.entries(object) as [Key, any][];
+  ): [string, unknown] | [string, unknown][] | undefined {
+    const entries = Object.entries(object);
 
     if (amount === 1) {
       return entries[0];
@@ -31,11 +33,14 @@ export default class ObjectAccess {
     return entries.slice(0, amount);
   }
 
-  static last<Key extends string|number|symbol>(
-    object: JsonObject,
+  static last<Type extends Record<string, unknown>>(object: Type, amount: 1): [string, unknown] | undefined; // eslint-disable-line max-len
+  static last<Type extends Record<string, unknown>>(object: Type, amount: number): [string, unknown][]; // eslint-disable-line max-len
+  static last<Type extends Record<string, unknown>>(object: Type): [string, unknown] | undefined;
+  static last<Type extends Record<string, unknown>>(
+    object: Type,
     amount = 1,
-  ): JsonObject|JsonObject[]|undefined {
-    const entries = Object.entries(object) as [Key, any][];
+  ): [string, unknown] | [string, unknown][] | undefined {
+    const entries = Object.entries(object);
 
     if (amount === 1) {
       return entries[entries.length - 1];
@@ -44,36 +49,101 @@ export default class ObjectAccess {
     return entries.slice(-amount);
   }
 
-  static addProperty<Key extends string | number | symbol, Value>(
-    object: { [key: string|number|symbol]: any },
+  static addProperty<Obj extends object, Key extends string | number | symbol, Value>(
+    object: Obj,
     keyToAdd: Key,
     valueToAdd: Value,
-  ): { [key: string|number|symbol]: any } {
+  ): Obj & Record<Key, Value> {
     return {
       ...object,
       [keyToAdd]: valueToAdd,
-    };
+    } as Obj & Record<Key, Value>;
   }
 
-  static removeProperty<Key extends string | number | symbol>(
-    object: JsonObject,
+  /**
+   * @deprecated: Will be removed in a future release. Use `ObjectAccess.omit`
+   */
+  static removeProperty<Type extends object, Key extends keyof Type>(
+    object: Type,
     keyToRemove: Key,
-  ): JsonObject {
+  ): Omit<Type, Key> {
     // eslint-disable-next-line no-unused-vars
     const { [keyToRemove]: removedItem, ...rest } = object;
-    return rest as JsonObject;
+    return rest as Omit<Type, Key>;
   }
 
-  static getRandomProperty<Key extends string | number | symbol>(
-    object: JsonObject,
-  ): JsonObject|undefined  {
-    const entries = Object.entries(object) as [Key, any][];
+  static getRandomProperty<Type extends Record<string, unknown>>(
+    object: Type,
+  ): [string, unknown] | undefined {
+    const entries = Object.entries(object);
     const randomIndex = Utilities.getRandomNumber(0, entries.length - 1);
 
     return entries[randomIndex];
   }
 
-  static deepClone(object: JsonObject): JsonObject|undefined {
-    return JSON.parse(JSON.stringify(object));
+  static deepClone<Type>(object: Type): Type {
+    return structuredClone(object);
+  }
+
+  static pick<Type extends object, Key extends keyof Type>(
+    object: Type,
+    keys: Key[],
+  ): Pick<Type, Key> {
+    const result = {} as Pick<Type, Key>;
+    keys.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(object, key)) {
+        result[key] = object[key];
+      }
+    });
+    return result;
+  }
+
+  static omit<Type extends object, Key extends keyof Type>(
+    object: Type,
+    keys: Key[],
+  ): Omit<Type, Key> {
+    const result = { ...object };
+    keys.forEach((key) => delete (result as Type)[key]);
+    return result as Omit<Type, Key>;
+  }
+
+  static deepMerge<Type extends object>(target: Type, source: Partial<Type>): Type {
+    const result: Type = structuredClone(target);
+
+    for (const key of Object.keys(source) as (keyof Type)[]) {
+      const sourceValue = source[key];
+      const targetValue = result[key];
+
+      if (
+        sourceValue !== null &&
+        typeof sourceValue === 'object' &&
+        !Array.isArray(sourceValue) &&
+        targetValue !== null &&
+        typeof targetValue === 'object' &&
+        !Array.isArray(targetValue)
+      ) {
+        result[key] = ObjectAccess.deepMerge(
+          targetValue as object,
+          sourceValue as object,
+        ) as Type[keyof Type];
+      } else {
+        result[key] = sourceValue as Type[keyof Type];
+      }
+    }
+
+    return result;
+  }
+
+  static mapValues<Type extends object, Value>(
+    object: Type,
+    callback: (value: Type[keyof Type], key: keyof Type) => Value,
+  ): Record<keyof Type, Value> {
+    const result = {} as Record<keyof Type, Value>;
+
+    for (const key of Object.keys(object) as (keyof Type)[]) {
+      result[key] = callback(object[key], key);
+    }
+
+    return result;
   }
 }

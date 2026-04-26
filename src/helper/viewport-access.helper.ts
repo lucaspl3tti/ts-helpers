@@ -1,4 +1,4 @@
-import type { Breakpoint } from '../interfaces/general.interface';
+import type { Breakpoint, MediaQueryType } from '../types/viewport.types';
 
 /**
  * ViewportAccess provides a collection of function to detect the current viewport
@@ -17,7 +17,7 @@ export default class ViewportAccess {
     'uhd': 3840,
   };
 
-  static getMediaQuery(breakpoint: Breakpoint, type: 'min'|'max' = 'min'): MediaQueryList {
+  static getMediaQuery(breakpoint: Breakpoint, type: MediaQueryType = 'min'): MediaQueryList {
     const breakpointWidth = this.breakpoints[breakpoint];
     return window.matchMedia(`(${type}-width: ${breakpointWidth}px)`);
   }
@@ -128,5 +128,13 @@ export default class ViewportAccess {
   static isUHD(): boolean {
     const viewportWidth = window.innerWidth;
     return viewportWidth >= this.breakpoints.uhd;
+  }
+
+  static isAbove(breakpoint: Breakpoint): boolean {
+    return window.innerWidth >= this.breakpoints[breakpoint];
+  }
+
+  static isBelow(breakpoint: Breakpoint): boolean {
+    return window.innerWidth < this.breakpoints[breakpoint];
   }
 }

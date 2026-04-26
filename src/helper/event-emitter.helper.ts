@@ -1,7 +1,7 @@
 import type {
   CallbackOptions,
   Listener,
-} from '../interfaces/general.interface';
+} from '../types/event.types';
 
 /**
  * Event Emitter which works with the provided DOM element.
@@ -33,8 +33,8 @@ import type {
  *
  */
 export default class NativeEventEmitter<Element extends HTMLElement> {
-  public _element: Element|Document;
-  public _listeners: Listener[];
+  private _element: Element|Document;
+  private _listeners: Listener[];
 
   constructor(element: Element|Document = document) {
     this._element = element;
@@ -58,7 +58,7 @@ export default class NativeEventEmitter<Element extends HTMLElement> {
     this._listeners = value;
   }
 
-  publish<EventType extends Record<string, any>>(
+  publish<EventType extends Record<string, unknown>>(
     eventName: string,
     detail: EventType = {} as EventType,
     cancelable = false,
@@ -123,7 +123,7 @@ export default class NativeEventEmitter<Element extends HTMLElement> {
         if (listener.splitEventName[0]) {
           this.element.removeEventListener(
             listener.splitEventName[0],
-            listener.callback as EventListener,
+            listener.callback,
           );
         }
 
@@ -143,7 +143,7 @@ export default class NativeEventEmitter<Element extends HTMLElement> {
 
       this.element.removeEventListener(
         listener.splitEventName[0],
-        listener.callback as EventListener,
+        listener.callback,
       );
     });
   }
